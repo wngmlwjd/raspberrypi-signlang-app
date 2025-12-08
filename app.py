@@ -4,6 +4,7 @@ from collections import deque
 import cv2
 import numpy as np
 import time
+import traceback
 
 from inference.extract_landmarks import extract_landmarks
 from inference.preprocessor import process_to_feature
@@ -13,14 +14,22 @@ app = Flask(__name__)
 
 SEQ_LEN = 30
 buffer = deque(maxlen=SEQ_LEN)
-infer = AppInferenceTFLite()
+
+try:
+    infer = AppInferenceTFLite()
+except Exception as e:
+    print("❌ Failed to load TFLite model:", e)
+    traceback.print_exc()
+    infer = None
 
 # =========================
 # Video capture
 # =========================
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
-    raise RuntimeError("❌ Camera open failed.")
+    print("❌ Camera open failed.")
+else:
+    print("✅ Camera opened.")
 
 # =========================
 # Generator for streaming frames
@@ -30,43 +39,50 @@ def gen_frames():
     last_print = time.time()
 
     while True:
-        ret, frame = cap.read()
-        if not ret:
+        try:
+            ret, frame = cap.read()
+            if not ret:
+                print("⚠️ Frame read failed, retrying...")
+                continue
+
+            frame_count += 1
+            now = time.time()
+
+            # -------------------------------
+            # 1) Extract hand landmarks
+            # -------------------------------
+            landmarks = extract_landmarks(frame)
+            if landmarks is not None and infer is not None:
+                try:
+                    feature = process_to_feature(landmarks)
+                    buffer.append(feature)
+
+                    if len(buffer) == SEQ_LEN:
+                        seq_array = np.array(buffer)
+                        pred_word, pred_prob = infer.predict_from_array(seq_array)
+
+                        # 화면에 텍스트 오버레이
+                        cv2.putText(frame, f"{pred_word} ({pred_prob.max():.2f})",
+                                    (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+                except Exception as e:
+                    print("⚠️ Inference failed:", e)
+                    traceback.print_exc()
+
+            # -------------------------------
+            # 2) Encode frame as JPEG
+            # -------------------------------
+            ret, buffer_jpg = cv2.imencode('.jpg', frame)
+            if not ret:
+                continue
+
+            frame_bytes = buffer_jpg.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+        except Exception as e:
+            print("⚠️ Frame processing failed:", e)
+            traceback.print_exc()
             continue
-
-        frame_count += 1
-        now = time.time()
-
-        # -------------------------------
-        # 1) Extract hand landmarks
-        # -------------------------------
-        landmarks = extract_landmarks(frame)
-        if landmarks is not None:
-            feature = process_to_feature(landmarks)
-            buffer.append(feature)
-
-        # -------------------------------
-        # 2) Inference
-        # -------------------------------
-        if len(buffer) == SEQ_LEN:
-            seq_array = np.array(buffer)
-            pred_word, pred_prob = infer.predict_from_array(seq_array)
-
-            # 화면에 텍스트 오버레이
-            cv2.putText(frame, f"{pred_word} ({pred_prob.max():.2f})", 
-                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
-
-        # -------------------------------
-        # 3) Encode frame as JPEG
-        # -------------------------------
-        ret, buffer_jpg = cv2.imencode('.jpg', frame)
-        if not ret:
-            continue
-
-        frame_bytes = buffer_jpg.tobytes()
-        # multipart streaming
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
 # =========================
 # Routes
@@ -84,4 +100,4 @@ def video_feed():
 # Run server
 # =========================
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=5000, debug=True)
