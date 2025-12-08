@@ -1,7 +1,6 @@
 from collections import deque
 import numpy as np
 import cv2
-import subprocess
 
 from inference.extract_landmarks import extract_landmarks
 from inference.preprocessor import process_to_feature
@@ -10,20 +9,14 @@ from inference.TFLite import AppInferenceTFLite
 SEQ_LEN = 30
 buffer = deque(maxlen=SEQ_LEN)
 
-
 def run_realtime_inference():
 
     infer = AppInferenceTFLite()
 
-    # ======== rpicam-vid → ffmpeg → OpenCV =========
-    gst_pipeline = (
-        "rpicam-vid --inline --nopreview -t 0 --width 640 --height 480 --framerate 30 "
-        "-o - | "
-        "ffmpeg -i pipe:0 -vcodec rawvideo -pix_fmt bgr24 -f rawvideo -"
-    )
-
-    print("📸 opening camera...")
-    cap = cv2.VideoCapture(gst_pipeline, cv2.CAP_GSTREAMER)
+    # ======== V4L2 장치 사용 =========
+    cam_device = "/dev/video10"
+    print(f"📸 opening camera: {cam_device}")
+    cap = cv2.VideoCapture(cam_device)
 
     if not cap.isOpened():
         print("❌ camera open failed")
