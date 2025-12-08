@@ -1,6 +1,6 @@
 # ui/routes.py
 from flask import Blueprint, render_template, Response
-from camera.camera_stream.py import CameraStream
+from camera.camera_stream import CameraStream
 
 bp = Blueprint("ui", __name__)
 
