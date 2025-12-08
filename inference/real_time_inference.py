@@ -12,48 +12,63 @@ buffer = deque(maxlen=SEQ_LEN)
 
 def run_realtime_inference():
     infer = AppInferenceTFLite()
+
+    print("📸 Opening camera...")
     cap = cv2.VideoCapture(0)
 
-    frame_count = 0
-    last_print_time = time.time()
+    if not cap.isOpened():
+        print("❌ Camera open failed.")
+        return
 
+    print("✅ Camera opened.")
     print("🔧 Real-time inference started...")
     print("-------------------------------------------")
+
+    frame_count = 0
+    last_print = time.time()
 
     while True:
         ret, frame = cap.read()
         if not ret:
-            print("⚠️  Frame read failed, skipping...")
+            print("⚠️  Frame read failed... retrying")
+            time.sleep(0.1)
             continue
 
         frame_count += 1
+        now = time.time()
 
-        # =========================
-        # 랜드마크 추출
-        # =========================
+        # -------------------------------
+        # 1) Extract hand landmarks
+        # -------------------------------
         landmarks = extract_landmarks(frame)
 
         if landmarks is None:
-            if time.time() - last_print_time > 1.0:
+            if now - last_print > 0.5:
                 print("📌 No hand detected...")
-                last_print_time = time.time()
+                last_print = now
             continue
         else:
-            print(f"🖐 Hand detected (frame {frame_count})")
+            if now - last_print > 0.5:
+                print(f"🖐 Hand detected (frame {frame_count})")
+                last_print = now
 
-        # =========================
-        # 전처리 → feature 생성
-        # =========================
+        # -------------------------------
+        # 2) Preprocess → feature
+        # -------------------------------
         feature = process_to_feature(landmarks)
         buffer.append(feature)
 
-        # 버퍼 진행 상황 출력
+        # -------------------------------
+        # 3) Buffer progress
+        # -------------------------------
         filled = len(buffer)
-        print(f"📚 Buffer: {filled}/{SEQ_LEN}")
+        if now - last_print > 0.5:
+            print(f"📚 Buffer: {filled}/{SEQ_LEN}")
+            last_print = now
 
-        # =========================
-        # 추론 수행
-        # =========================
+        # -------------------------------
+        # 4) Inference
+        # -------------------------------
         if filled == SEQ_LEN:
             print("\n🔮 Running inference...")
             seq_array = np.array(buffer)
@@ -62,14 +77,9 @@ def run_realtime_inference():
             print(f"👉 Result: {pred_word}  |  confidence={pred_prob.max():.4f}")
             print("-------------------------------------------\n")
 
-        # =========================
-        # 화면 표시
-        # =========================
-        cv2.imshow("frame", frame)
-        if cv2.waitKey(1) == ord('q'):
-            print("🛑 Stopped by user.")
-            break
+        # 라즈베리파이에서는 imshow 제거
+        # q 입력은 콘솔에서 받을 수 없으므로 생략
+        # 종료하려면 Ctrl + C
 
     cap.release()
-    cv2.destroyAllWindows()
     print("✨ Real-time inference stopped.")
