@@ -1,20 +1,26 @@
-from picamera2 import Picamera2
 import cv2
-import time
 
-picam2 = Picamera2()
+# 640x480 30fps 스트림
+gst_pipeline = (
+    "rpicam-vid --inline --nopreview -t 0 --width 640 --height 480 --framerate 30 "
+    "-o - | "
+    "ffmpeg -i pipe:0 -vcodec rawvideo -pix_fmt bgr24 -f rawvideo -"
+)
 
-config = picam2.create_preview_configuration(main={"format": "RGB888", "size": (640, 480)})
-picam2.configure(config)
-picam2.start()
+cap = cv2.VideoCapture(gst_pipeline, cv2.CAP_GSTREAMER)
 
-time.sleep(1)
+if not cap.isOpened():
+    print("카메라 열기 실패")
+    exit()
 
 while True:
-    frame = picam2.capture_array()
-    cv2.imshow("frame", frame)
+    ret, frame = cap.read()
+    print("ret:", ret)
+    if ret:
+        cv2.imshow("frame", frame)
 
-    if cv2.waitKey(1) == ord('q'):
+    if cv2.waitKey(1) == ord("q"):
         break
 
+cap.release()
 cv2.destroyAllWindows()
