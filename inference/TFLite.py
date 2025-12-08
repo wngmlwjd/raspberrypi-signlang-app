@@ -2,7 +2,6 @@ import os
 import numpy as np
 import joblib
 from sklearn.preprocessing import LabelEncoder
-import tensorflow as tf
 import tflite_runtime.interpreter as tflite
 
 from config.config import MODEL_PATH, LABEL_ENCODER_PATH, MAXJ_PATH
@@ -75,21 +74,16 @@ class AppInferenceTFLite:
             self.max_joints = None
 
         # -----------------------------
-        # Load TFLite model
+        # Load TFLite model (Flex delegate 제거)
         # -----------------------------
         self.tflite_path = MODEL_PATH
-
         print(f"📌 Loading TFLite model: {self.tflite_path}")
 
-        # ← 여기에 Flex delegate 버전의 interpreter 생성
-        self.interpreter = tflite.Interpreter(
-            model_path=self.tflite_path,
-            experimental_delegates=[
-                tflite.load_delegate("/usr/lib/aarch64-linux-gnu/libtensorflowlite_flex.so")
-            ]
-        )
-        self.interpreter.allocate_tensors()
-
+        try:
+            self.interpreter = tflite.Interpreter(model_path=self.tflite_path)
+            self.interpreter.allocate_tensors()
+        except Exception as e:
+            raise RuntimeError(f"❌ Failed to load TFLite model: {e}")
 
         self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
