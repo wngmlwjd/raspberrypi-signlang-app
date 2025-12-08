@@ -1,5 +1,6 @@
 import pygame
 import numpy as np
+import cv2
 
 pygame.init()
 screen = pygame.display.set_mode((640, 480))
