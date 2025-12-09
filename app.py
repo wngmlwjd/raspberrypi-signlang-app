@@ -16,7 +16,7 @@ def start_saving():
         t.start()
         
         counter += 1
-        time.sleep(5)  # 5초 간격으로 녹화 시작
+        time.sleep(6)  # 5초 간격으로 녹화 시작
 
 @app.route("/")
 def index():
