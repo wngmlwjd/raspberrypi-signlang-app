@@ -9,7 +9,7 @@ import glob
 from config.config import SEQUENCE_LENGTH, CMD, RAW_DIR, FRAMES_DIR
 from inference.extract_frames import extract_frames  # 저장 전용
 from inference.extract_landmarks import extract_landmarks_from_frames
-from inference.preprocessor import process_to_feature
+from inference.preprocessor import generate_features_with_sliding
 from inference.TFLite import AppInferenceTFLite
 
 buffer = deque(maxlen=SEQUENCE_LENGTH)
@@ -50,15 +50,12 @@ def rpicam_realtime_loop(interval=5):
             # -------------------------------
             # Landmark 추출
             # -------------------------------
-            landmarks = extract_landmarks_from_frames()
-            if landmarks is None:
-                continue
+            extract_landmarks_from_frames()
 
             # -------------------------------
             # Feature 전처리
             # -------------------------------
-            # feature = process_to_feature(landmarks)
-            # buffer.append(feature)
+            feature_count = generate_features_with_sliding()
 
             # -------------------------------
             # 버퍼가 채워지면 Inference
