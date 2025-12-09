@@ -8,7 +8,7 @@ from inference.video_saver import save_video
 from inference.extract_frames import extract_frames
 from inference.extract_landmarks import extract_landmarks
 from inference.preprocessor import generate_features_with_sliding
-from inference.predictor import load_tflite_model, infer_feature
+from inference.predictor import infer_feature
 from config import config
 
 app = Flask(__name__)
@@ -37,16 +37,10 @@ def record_video():
     feature_count = generate_features_with_sliding()
     recording_status = "랜드마크 추출 및 특징 생성 완료. 추론 중..."
     
-    interpreter = load_tflite_model(config.MODEL_PATH)
     feature_files = sorted([f for f in os.listdir(config.FEATURES_DIR) if f.endswith(".npy")])
     
-    predictions = []
-    for f in feature_files:
-        feature = np.load(os.path.join(config.FEATURES_DIR, f))
-        pred = infer_feature(interpreter, feature)
-        predictions.append(pred)
+    predictions = infer_feature()
     
-    predictions = np.array(predictions)
     recording_status = "모든 과정 완료."
 
 

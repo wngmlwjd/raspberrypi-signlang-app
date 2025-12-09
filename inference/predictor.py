@@ -6,13 +6,21 @@ from config.config import FEATURES_DIR, MODEL_PATH
 from utils import log_message
 
 # ----------------------------------------------------
-# 1. TFLite 모델 로드
+# 1. TFLite 모델 로드 (Flex delegate 적용)
 # ----------------------------------------------------
 def load_tflite_model(model_path: str):
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"TFLite model not found: {model_path}")
 
-    interpreter = tf.lite.Interpreter(model_path=model_path)
+    # Flex delegate 적용
+    try:
+        delegate = tf.lite.experimental.load_delegate('libtensorflowlite_flex_delegate.so')
+        interpreter = tf.lite.Interpreter(model_path=model_path, experimental_delegates=[delegate])
+    except ValueError:
+        # Flex delegate가 없으면 기본 interpreter 사용
+        log_message("Flex delegate not found, using default interpreter")
+        interpreter = tf.lite.Interpreter(model_path=model_path)
+
     interpreter.allocate_tensors()
     log_message(f"TFLite model loaded: {model_path}")
     return interpreter
@@ -51,15 +59,10 @@ def infer_features_in_dir(
     all_preds = []
     for f in feature_files:
         feature = np.load(os.path.join(features_dir, f))
+        if feature.ndim != 2:
+            raise ValueError(f"Invalid feature shape for {f}: {feature.shape}, expected (T, J_max*3)")
         pred = infer_feature(interpreter, feature)
         log_message(f"Inferred {f}: {pred}")
         all_preds.append(pred)
 
     return np.array(all_preds)
-
-# ----------------------------------------------------
-# 4. 실행 예제
-# ----------------------------------------------------
-if __name__ == "__main__":
-    predictions = infer_features_in_dir()
-    print("All predictions shape:", predictions.shape)
