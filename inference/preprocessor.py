@@ -121,47 +121,49 @@ def generate_features_with_sliding(
     log_message(f"Found {len(npy_files)} frame npy files")
 
     # -----------------------------
-    # Normalize all frames
+    # Normalize all frames (멀티프레임 npy도 지원)
     # -----------------------------
     normalized_frames = []
 
     for fname in npy_files:
-        arr = np.load(os.path.join(frame_npy_dir, fname))   # (J,3) or (1,J,3)
+        arr = np.load(os.path.join(frame_npy_dir, fname))   # (J,3) or (T,J,3)
 
         if arr.size == 0:
             continue
 
-        # 첫 번째 차원이 1이면 제거
-        if arr.ndim == 3 and arr.shape[0] == 1:
-            arr = arr[0]  # (J,3)
+        # 2차원 → (1,J,3)로 변환
+        if arr.ndim == 2:  
+            arr = arr[np.newaxis, :, :]  # (1,J,3)
 
-        # 이제 shape 체크
-        if arr.ndim != 2 or arr.shape[1] != 3:
+        # 3차원, 첫 번째 차원이 1 이상이면 그대로 사용
+        elif arr.ndim != 3 or arr.shape[2] != 3:
             raise ValueError(f"Invalid landmark shape: {arr.shape}")
 
-        # pad or truncate
-        if arr.shape[0] < J_max:
-            arr = np.pad(arr, ((0, J_max - arr.shape[0]), (0, 0)), mode="constant")
-        elif arr.shape[0] > J_max:
-            arr = arr[:J_max, :]
+        # pad or truncate J
+        J = arr.shape[1]
+        if J < J_max:
+            arr = np.pad(arr, ((0, 0), (0, J_max - J), (0, 0)), mode="constant")
+        elif J > J_max:
+            arr = arr[:, :J_max, :]
 
         # normalize
-        arr = transform_and_normalize_landmarks(arr)[0]  # shape = (J_max,3)
-        normalized_frames.append(arr)
+        arr = transform_and_normalize_landmarks(arr)  # (T,J_max,3)
+        
+        # 모든 프레임을 리스트에 추가
+        for f in arr:
+            normalized_frames.append(f)
 
     total_frames = len(normalized_frames)
 
     # -----------------------------
-    # Sliding window
+    # Sliding window (기존과 동일)
     # -----------------------------
     os.makedirs(save_dir, exist_ok=True)
     feature_count = 0
 
     start = 0
     while start < total_frames:
-
         end = start + SEQUENCE_LENGTH
-
         seq = normalized_frames[start:end]
 
         # 부족하면 제로패딩
