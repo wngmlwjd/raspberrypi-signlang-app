@@ -1,50 +1,34 @@
-import subprocess
+# test_camera_stream.py
+from camera.camera_stream import CameraStream
 import cv2
-import numpy as np
+from config.config import CMD  # rpicam-vid 명령어
 
-def rpicam_vid_stream():
-    # rpicam-vid 명령어 설정
-    cmd = [
-        "rpicam-vid",
-        "-t", "5000",
-        "-o", "dataset/raw/test.mp4",       # stdout으로 영상 출력
-        "--width", "640",
-        "--height", "480",
-        "--framerate", "30",
-    ]
+def main():
+    # CameraStream 생성
+    cam = CameraStream(cmd=CMD)
+    print("✅ Camera stream started.")
 
-    # subprocess로 실행
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=10**8)
+    try:
+        while True:
+            frame_bytes = cam.get_frame()
+            if frame_bytes is None:
+                continue  # 아직 프레임이 준비되지 않음
 
-    data = b""
-    frame_count = 0
-    while True:
-        chunk = proc.stdout.read(1024)
-        if not chunk:
-            break
-        data += chunk
+            # JPEG → OpenCV 이미지
+            frame = cv2.imdecode(np.frombuffer(frame_bytes, dtype=np.uint8), cv2.IMREAD_COLOR)
+            if frame is None:
+                continue
 
-        # JPEG 프레임 경계 찾기
-        start = data.find(b'\xff\xd8')  # JPEG SOI
-        end = data.find(b'\xff\xd9')    # JPEG EOI
-        if start != -1 and end != -1:
-            jpg = data[start:end+2]
-            data = data[end+2:]
+            # 화면에 표시
+            cv2.imshow("CameraStream Test", frame)
 
-            # OpenCV로 디코딩
-            frame = cv2.imdecode(np.frombuffer(jpg, np.uint8), cv2.IMREAD_COLOR)
-            if frame is not None:
-                cv2.imshow("RPiCam VID Stream", frame)
-                
-                # 프레임 저장 예제
-                cv2.imwrite(f"frame_{frame_count:04d}.jpg", frame)
-                frame_count += 1
-
+            # q 누르면 종료
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-
-    proc.terminate()
-    cv2.destroyAllWindows()
+    finally:
+        cam.stop()
+        cv2.destroyAllWindows()
+        print("✅ Camera stream stopped.")
 
 if __name__ == "__main__":
-    rpicam_vid_stream()
+    main()
