@@ -51,7 +51,7 @@
             statusEl.textContent = data.status;
 
             // 영상 자동 재생 및 제목 표시
-            if (data.status.includes("녹화 완료") && videoContainer.style.display === "none") {
+            if (data.status.includes("녹화 및 프레임 추출 완료") && videoContainer.style.display === "none") {
                 videoSource.src = "/recorded_video";
                 videoContainer.style.display = "block";
                 videoEl.load();
@@ -63,11 +63,11 @@
                 framesContainer.style.display = "block";
                 const totalFrames = data.frame_count;
                 const displayCount = 5;
-                const step = Math.floor(totalFrames / displayCount);
+                const step = Math.floor(totalFrames / displayCount) || 1;
 
                 for (let i = 0; i < totalFrames && i < displayCount * step; i += step) {
                     const img = document.createElement("img");
-                    img.src = `/frames/frame_${i.toString().padStart(5, '0')}.jpg`;
+                    img.src = `/frames/frame_${i.toString().padStart(5,'0')}.jpg`;
                     img.width = 120;
                     framesDiv.appendChild(img);
                 }
