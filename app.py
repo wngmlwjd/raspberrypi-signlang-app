@@ -30,10 +30,9 @@ def record_video():
     recording_status = f"녹화 및 프레임 추출 완료. 랜드마크 추출 중..."
     
     landmark_count = extract_landmarks()
-    recording_status = f"랜드마크 추출 완료. 특징 생성 중..."
     
     feature_count = generate_features_with_sliding()
-    recording_status = f"특징 생성 완료."
+    recording_status = f"랜드마크 추출 및 특징 생성 완료."
 
 @app.route("/")
 def index():
