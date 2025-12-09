@@ -1,28 +1,29 @@
-from flask import Flask, Response, render_template
-from camera.camera_stream import CameraStream
-from config.config import CMD
+from flask import Flask
+import threading
+import time
+from inference import video_saver  # save_video()가 있는 모듈
 
 app = Flask(__name__)
 
-# 카메라 스트림 시작
-camera = CameraStream(cmd=CMD)
-
-def generate():
+def start_saving():
+    """
+    save_video()를 5초마다 반복 실행
+    """
+    counter = 0
+    
     while True:
-        frame = camera.get_frame()
-        if frame is not None:
-            yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
-
-@app.route("/video_feed")
-def video_feed():
-    return Response(generate(), mimetype="multipart/x-mixed-replace; boundary=frame")
+        video_saver.save_video(counter)
+        
+        counter += 1
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return "<h1>Video saving is running every 5 seconds...</h1>"
 
 if __name__ == "__main__":
-    try:
-        app.run(host="0.0.0.0", port=5000, debug=True)
-    finally:
-        camera.stop()
+    # 영상 저장 반복을 별도 스레드에서 시작
+    t = threading.Thread(target=start_saving, daemon=True)
+    t.start()
+
+    # Flask 서버 실행
+    app.run(host="0.0.0.0", port=5000, debug=True)
