@@ -15,6 +15,12 @@
     <!-- 녹화 상태 표시 -->
     <p id="status">대기 중</p>
 
+    <!-- 추출된 프레임 미리보기 -->
+    <div id="framesContainer" style="display:none; margin-bottom:20px;">
+        <h3>추출된 프레임</h3>
+        <div id="frames" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
+    </div>
+
     <!-- 녹화 영상 재생 -->
     <div id="videoContainer" style="display:none; margin-top:10px;">
         <h3>녹화된 영상</h3>
@@ -30,6 +36,8 @@
     const videoContainer = document.getElementById("videoContainer");
     const videoEl = document.getElementById("recordedVideo");
     const videoSource = document.getElementById("videoSource");
+    const framesContainer = document.getElementById("framesContainer");
+    const framesDiv = document.getElementById("frames");
 
     // 녹화 버튼 클릭
     form.addEventListener("submit", async (e) => {
@@ -39,6 +47,10 @@
         // 영상 초기화
         videoSource.src = "";
         videoContainer.style.display = "none";
+
+        // 프레임 초기화 → 버튼 클릭 시만
+        framesDiv.innerHTML = "";
+        framesContainer.style.display = "none";
 
         await fetch("/start_recording", { method: "POST" });
     });
@@ -57,7 +69,7 @@
     setInterval(async () => {
         const res = await fetch("/recording_status");
         const data = await res.json();
-        statusEl.textContent = data.status; // 진행 상황 표시
+        statusEl.textContent = data.status;
 
         // 영상 자동 재생
         if (data.status.includes("녹화 및 프레임 추출 완료") && videoContainer.style.display === "none") {
@@ -68,8 +80,21 @@
                 videoContainer.style.display = "block";
                 videoEl.load();
                 videoEl.play();
-            } else {
-                statusEl.textContent = "영상 준비 실패";
+
+                // 프레임 미리보기 → 영상 재생 후 표시
+                if (data.frame_count > 0 && framesContainer.style.display === "none") {
+                    framesContainer.style.display = "block";
+                    const totalFrames = data.frame_count;
+                    const displayCount = 5;
+                    const step = Math.floor(totalFrames / displayCount) || 1;
+
+                    for (let i = 0; i < totalFrames && i < displayCount * step; i += step) {
+                        const img = document.createElement("img");
+                        img.src = `/frames/frame_${i.toString().padStart(5,'0')}.jpg?time=${new Date().getTime()}`;
+                        img.width = 120;
+                        framesDiv.appendChild(img);
+                    }
+                }
             }
         }
     }, 1000);

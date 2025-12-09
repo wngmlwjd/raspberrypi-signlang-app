@@ -5,7 +5,7 @@ import shutil
 
 from inference.video_saver import save_video
 from inference.extract_frames import extract_frames
-from inference.extract_landmarks import extract_landmarks  # <-- 추가
+from inference.extract_landmarks import extract_landmarks
 from config import config
 
 app = Flask(__name__)
@@ -19,17 +19,16 @@ def record_video():
     recording_status = "녹화 중..."
     save_video()  # 녹화 실행
     recording_status = "녹화 완료. 프레임 추출 중..."
-
+    
     # 모든 프레임 추출
     frame_count = extract_frames(output_dir=config.FRAMES_DIR)
-    recording_status = f"프레임 추출 완료 ({frame_count} 프레임). 랜드마크 추출 중..."
+    
+    # 프레임 추출 후 랜드마크 추출
+    recording_status = "랜드마크 추출 중..."
+    extract_landmarks(frame_dir=config.FRAMES_DIR, save_dir=config.LANDMARKS_DIR)
 
-    # 프레임 기반 랜드마크 추출
-    try:
-        extract_landmarks(frame_dir=config.FRAMES_DIR, save_dir=config.LANDMARKS_DIR)
-        recording_status = f"녹화 및 프레임 추출 + 랜드마크 완료 ({frame_count} 프레임)"
-    except Exception as e:
-        recording_status = f"랜드마크 추출 실패: {e}"
+    recording_status = f"녹화, 프레임 추출 및 랜드마크 완료 ({frame_count} 프레임)"
+
 
 @app.route("/")
 def index():
@@ -39,10 +38,16 @@ def index():
 def start_recording():
     global recording_thread
     if recording_thread is None or not recording_thread.is_alive():
+
         # 기존 frames 폴더 삭제 후 재생성
         if os.path.exists(config.FRAMES_DIR):
             shutil.rmtree(config.FRAMES_DIR)
         os.makedirs(config.FRAMES_DIR, exist_ok=True)
+
+        # 기존 landmarks 폴더 삭제 후 재생성
+        if os.path.exists(config.LANDMARKS_DIR):
+            shutil.rmtree(config.LANDMARKS_DIR)
+        os.makedirs(config.LANDMARKS_DIR, exist_ok=True)
 
         recording_thread = threading.Thread(target=record_video, daemon=True)
         recording_thread.start()
@@ -62,7 +67,7 @@ def recorded_video():
 
 @app.route("/frames/<filename>")
 def serve_frame(filename):
-    path = os.path.join(config.FRAMES_DIR, filename)
+    path = os.path.join(config.FRAMES_DIR, filename)  # <-- 변경
     if os.path.exists(path):
         return send_file(path, mimetype="image/jpeg")
     return "프레임이 없습니다.", 404
