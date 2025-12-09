@@ -115,10 +115,11 @@
         if (framesContainer.style.display === "block" && data.landmark_count > 0 && landmarksContainer.style.display === "none") {
             landmarksContainer.style.display = "block";
             const totalLandmarks = data.landmark_count;
-            step = Math.floor(totalLandmarks / displayCount) || 1;
+            const displayCount = 5;
+            const step = Math.floor(totalLandmarks / displayCount) || 1;
 
             for (let i = 0; i < totalLandmarks && i < displayCount * step; i += step) {
-                img = document.createElement("img");
+                const img = document.createElement("img");
                 img.src = `/draw_landmarks/landmark_${i.toString().padStart(5,'0')}.jpg?time=${new Date().getTime()}`;
                 img.width = 120;
                 landmarksDiv.appendChild(img);
