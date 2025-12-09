@@ -1,17 +1,12 @@
 import subprocess
-import time
+import os
+
+from config.config import FRAMES_DIR
 
 counter = 0
 
-while True:
-    # 파일 이름 생성 (3자리 0패딩)
+while counter < 1000:
     filename = f"test_{counter:03d}.jpg"
-    
-    # rpicam-dpeg 명령어 실행
-    subprocess.run(["rpicam-jpeg", "--output", filename, "--timeout", "500"])
-    
-    # 카운터 증가
+    # timeout을 1ms로 설정 → 사실상 바로 촬영 후 저장
+    subprocess.run(["rpicam-jpeg", "--output", os.path.join(FRAMES_DIR, filename), "--timeout", "1"])
     counter += 1
-    
-    # 반복 간격 (timeout이 500ms이므로 sleep은 선택 사항)
-    time.sleep(0.1)
