@@ -49,7 +49,7 @@ def record_video():
     recording_status = "랜드마크 추출 및 특징 생성 완료. 추론 중..."
     
     # 5) feature별 예측 + top5 합산 최종 라벨
-    predictions, feature_labels, top5_per_feature, final_label = infer_features_in_dir(top5_aggregate=True)
+    predictions, feature_labels, top5_per_feature, final_label = infer_features_in_dir(use_weighted_average=True)
 
     predicted_labels = {
         "feature_labels": feature_labels,

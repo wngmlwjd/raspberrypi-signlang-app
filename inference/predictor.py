@@ -40,33 +40,31 @@ def infer_feature(model, feature: np.ndarray) -> np.ndarray:
     return pred[0]
 
 # ----------------------------------------------------
-# 4. top5 합산 기반 최종 라벨 결정
+# top5 합산 대신 확률 가중 평균 기반 최종 라벨 결정
 # ----------------------------------------------------
-def predict_top5_aggregate(all_preds, le_dict):
+def predict_weighted_average(all_preds, le_dict):
     """
     all_preds : (num_features, num_classes) - 각 feature별 softmax
-    le_dict    : int_to_label dict
-    return     : 최종 예측 라벨 1개
+    le_dict   : int_to_label dict
+    return    : 최종 예측 라벨
     """
-    top5_labels = []
-
-    for pred in all_preds:
-        top5_idx = np.argsort(pred)[-5:][::-1]  # 확률 높은 순으로 top5 index
-        top5_labels.extend([le_dict['int_to_label'].get(i, "unknown") for i in top5_idx])
-
-    # 다수결로 최종 라벨 결정
-    counter = Counter(top5_labels)
-    final_label = counter.most_common(1)[0][0]
+    # feature별 확률 평균 계산
+    avg_probs = np.mean(all_preds, axis=0)  # (num_classes,)
+    
+    # 확률 최대인 클래스 선택
+    final_idx = np.argmax(avg_probs)
+    final_label = le_dict['int_to_label'].get(final_idx, "unknown")
     return final_label
 
+
 # ----------------------------------------------------
-# 5. 폴더 내 feature 전체 추론 + 라벨 디코딩
+# 폴더 내 feature 전체 추론 + 라벨 디코딩 (수정)
 # ----------------------------------------------------
 def infer_features_in_dir(
     features_dir: str = FEATURES_DIR,
     model_path: str = MODEL_PATH,
     label_encoder_path: str = LABEL_ENCODER_PATH,
-    top5_aggregate: bool = False
+    use_weighted_average: bool = True  # True이면 확률 기반, False이면 기존 top5 다수결
 ):
     model = load_h5_model(model_path)
     le_dict = load_label_encoder(label_encoder_path)
@@ -77,7 +75,7 @@ def infer_features_in_dir(
 
     all_preds = []
     feature_labels = []
-    top5_per_feature = []  # 각 feature별 top5 라벨 저장
+    top5_per_feature = []
 
     for f in feature_files:
         feature = np.load(os.path.join(features_dir, f))
@@ -97,8 +95,14 @@ def infer_features_in_dir(
 
     all_preds = np.array(all_preds)
 
-    if top5_aggregate:
-        final_label = predict_top5_aggregate(all_preds, le_dict)
-        return all_preds, feature_labels, top5_per_feature, final_label
+    # 최종 라벨 결정
+    if use_weighted_average:
+        final_label = predict_weighted_average(all_preds, le_dict)
     else:
-        return all_preds, feature_labels, top5_per_feature
+        from collections import Counter
+        # 기존 top5 다수결 방식
+        top5_labels_flat = [label for sublist in top5_per_feature for label in sublist]
+        counter = Counter(top5_labels_flat)
+        final_label = counter.most_common(1)[0][0]
+
+    return all_preds, feature_labels, top5_per_feature, final_label
