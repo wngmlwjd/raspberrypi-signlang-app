@@ -1,5 +1,6 @@
 import cv2
 import os
+from utils import log_message
 from config import config
 
 def extract_frames(video_path=None, output_dir="frames"):
