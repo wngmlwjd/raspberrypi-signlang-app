@@ -8,20 +8,20 @@
 <body>
     <h1>Camera Stream</h1>
 
-    <form id="recordForm" method="POST" action="/start_recording">
+    <form id="recordForm" method="POST">
         <button type="submit">번역 시작</button>
     </form>
 
     <p id="status">대기 중</p>
     
-    <p>마지막 예측 라벨:</p>
+    <h3>최종 예측 결과</h3>
     <ul>
         <li>확률 기반 최종 라벨: <span id="pred_label_prob">-</span> (<span id="pred_prob">-</span>)</li>
         <li>다수결 기반 최종 라벨: <span id="pred_label_vote">-</span></li>
     </ul>
 
     <h3>Feature별 Top5 라벨</h3>
-    <div id="top5Container"></div>
+    <div id="top5Container" class="top5-box"></div>
 
     <div id="landmarksContainer" class="hidden">
         <h3>랜드마크 미리보기</h3>

@@ -8,82 +8,81 @@ const framesDiv = document.getElementById("frames");
 const landmarksContainer = document.getElementById("landmarksContainer");
 const landmarksDiv = document.getElementById("landmarks");
 const top5Container = document.getElementById("top5Container");
+
 const predLabelProbEl = document.getElementById("pred_label_prob");
 const predProbEl = document.getElementById("pred_prob");
 const predLabelVoteEl = document.getElementById("pred_label_vote");
 
+// ------------------------------------------------------
+//  Top5 UI 업데이트
+// ------------------------------------------------------
 function updateTop5Labels(top5_per_feature, top5_probs_per_feature) {
     top5Container.innerHTML = "";
+
     if (!top5_per_feature || !top5_probs_per_feature) return;
 
-    top5_per_feature.forEach((top5, idx) => {
+    top5_per_feature.forEach((labels, idx) => {
         const probs = top5_probs_per_feature[idx];
-        const div = document.createElement("div");
-        div.innerHTML = `Feature ${idx + 1}: ` + top5.map((label, i) => `${label} (${probs[i]})`).join(", ");
-        top5Container.appendChild(div);
+        const wrap = document.createElement("div");
+        wrap.className = "top5-item";
+
+        let html = `<b>Feature ${idx + 1}</b><br>`;
+        html += labels.map((label, i) => {
+            return `${label} (${probs[i]})`;
+        }).join("<br>");
+
+        wrap.innerHTML = html;
+        top5Container.appendChild(wrap);
     });
 }
 
-// 녹화 버튼 클릭
+// ------------------------------------------------------
+//  녹화 시작 버튼
+// ------------------------------------------------------
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     statusEl.textContent = "녹화 중...";
 
-    // 영상 초기화 및 숨기기
-    videoSource.src = "";
     videoContainer.classList.add("hidden");
+    videoSource.src = "";
 
-    // 프레임 초기화 및 숨기기
-    framesDiv.innerHTML = "";
     framesContainer.classList.add("hidden");
+    framesDiv.innerHTML = "";
 
-    // 랜드마크 초기화 및 숨기기
-    landmarksDiv.innerHTML = "";
     landmarksContainer.classList.add("hidden");
+    landmarksDiv.innerHTML = "";
 
-    // 예측 라벨 초기화
     predLabelProbEl.innerText = "-";
     predProbEl.innerText = "-";
     predLabelVoteEl.innerText = "-";
+
     top5Container.innerHTML = "";
 
-    // 서버에 녹화 시작 요청
     await fetch("/start_recording", { method: "POST" });
 });
 
-// 영상 준비 확인 함수
-const waitForVideo = async (url, retries = 10, delay = 500) => {
-    for (let i = 0; i < retries; i++) {
-        try {
-            const res = await fetch(url, { method: "HEAD" });
-            if (res.ok) return true;
-        } catch (error) {
-            console.error("Video check failed, retrying:", error);
-        }
-        await new Promise(r => setTimeout(r, delay));
-    }
-    return false;
-};
-
-// 녹화 상태 모니터링 및 업데이트
+// ------------------------------------------------------
+//  녹화 상태 모니터링
+// ------------------------------------------------------
 async function monitorStatus() {
     const res = await fetch("/recording_status");
     const data = await res.json();
-    statusEl.textContent = data.status;
 
+    statusEl.textContent = data.status;
     const labels = data.predicted_labels;
 
-    // 최종 라벨 및 확률
+    // --- 최종 라벨 ---
     predLabelProbEl.innerText = labels?.final_label_prob || "-";
-    predProbEl.innerText = labels?.final_prob != null ? labels.final_prob : "-";
+    predProbEl.innerText = labels?.final_prob ?? "-";
     predLabelVoteEl.innerText = labels?.final_label_vote || "-";
 
-    // feature별 top5 + 확률
+    // --- Top5 ---
     updateTop5Labels(labels?.top5_per_feature, labels?.top5_probs_per_feature);
 
-    // 영상 자동 재생
+    // --- 영상 준비되면 재생 ---
     if (data.status.includes("프레임 추출 완료") && videoContainer.classList.contains("hidden")) {
-        const videoUrl = `/recorded_video?time=${new Date().getTime()}`;
+        const videoUrl = `/recorded_video?time=${Date.now()}`;
         const exists = await waitForVideo(videoUrl);
         if (exists) {
             videoSource.src = videoUrl;
@@ -93,38 +92,49 @@ async function monitorStatus() {
         }
     }
 
-    // 프레임 미리보기
+    // --- 프레임 미리보기 ---
     if (!videoContainer.classList.contains("hidden") && data.frame_count > 0 && framesContainer.classList.contains("hidden")) {
         framesContainer.classList.remove("hidden");
         framesDiv.innerHTML = "";
 
-        const totalFrames = data.frame_count;
-        const displayCount = 5;
-        const step = Math.floor(totalFrames / displayCount) || 1;
+        const total = data.frame_count;
+        const count = 5;
+        const step = Math.floor(total / count) || 1;
 
-        for (let i = 0; i < totalFrames && i < displayCount * step; i += step) {
+        for (let i = 0; i < total && i < count * step; i += step) {
             const img = document.createElement("img");
-            img.src = `/frames/frame_${i.toString().padStart(5,'0')}.jpg?time=${new Date().getTime()}`;
+            img.src = `/frames/frame_${i.toString().padStart(5, '0')}.jpg?time=${Date.now()}`;
             framesDiv.appendChild(img);
         }
     }
 
-    // 랜드마크 미리보기
+    // --- 랜드마크 미리보기 ---
     if (data.status.includes("랜드마크 추출 및 특징 생성 완료") && landmarksContainer.classList.contains("hidden")) {
         landmarksContainer.classList.remove("hidden");
         landmarksDiv.innerHTML = "";
 
-        const totalLandmarks = data.landmark_count;
-        const displayCount = 5;
-        const step = Math.floor(totalLandmarks / displayCount) || 1;
+        const total = data.landmark_count;
+        const count = 5;
+        const step = Math.floor(total / count) || 1;
 
-        for (let i = 0; i < totalLandmarks && i < displayCount * step; i += step) {
+        for (let i = 0; i < total && i < count * step; i += step) {
             const img = document.createElement("img");
-            img.src = `/draw_landmarks/landmark_${i.toString().padStart(5,'0')}.jpg?time=${new Date().getTime()}`;
+            img.src = `/draw_landmarks/landmark_${i.toString().padStart(5,'0')}.jpg?time=${Date.now()}`;
             landmarksDiv.appendChild(img);
         }
     }
 }
 
-// 1초마다 상태 업데이트
+// 영상 존재 체크
+async function waitForVideo(url, retries = 10, delay = 500) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const res = await fetch(url, { method: "HEAD" });
+            if (res.ok) return true;
+        } catch (e) {}
+        await new Promise(r => setTimeout(r, delay));
+    }
+    return false;
+}
+
 setInterval(monitorStatus, 1000);
