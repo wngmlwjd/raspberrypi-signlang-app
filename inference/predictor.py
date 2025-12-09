@@ -156,10 +156,6 @@ def infer_features_in_dir_realistic_kyukno(
     features_dir: str = FEATURES_DIR,
     model_path: str = MODEL_PATH,
     label_encoder_path: str = LABEL_ENCODER_PATH,
-    use_weighted_average: bool = True,
-    recent_n: int = 5,
-    kyukno_label: str = "격노",
-    kyukno_threshold: float = 0.95
 ):
     model = load_h5_model(model_path)
     le_dict = load_label_encoder(label_encoder_path)
@@ -192,13 +188,25 @@ def infer_features_in_dir_realistic_kyukno(
 
     all_preds = np.array(all_preds)
 
-    if use_weighted_average:
-        final_label, final_prob = predict_weighted_average_middle(all_preds, le_dict)
-    else:
-        from collections import Counter
-        top5_labels_flat = [label for sublist in top5_per_feature for label in sublist]
-        counter = Counter(top5_labels_flat)
-        final_label = counter.most_common(1)[0][0]
-        final_prob = None
+    # --------------------------
+    # 1) 확률 기반 (중간 1/3)
+    # --------------------------
+    final_label_prob, final_prob = predict_weighted_average_middle(all_preds, le_dict)
 
-    return all_preds, feature_labels, top5_per_feature, top5_probs_per_feature, final_label, final_prob
+    # --------------------------
+    # 2) 다수결 기반 (top5 풀어서 카운트)
+    # --------------------------
+    from collections import Counter
+    top5_labels_flat = [label for sublist in top5_per_feature for label in sublist]
+    counter = Counter(top5_labels_flat)
+    final_label_vote = counter.most_common(1)[0][0]
+
+    return {
+        "all_preds": all_preds,
+        "feature_labels": feature_labels,
+        "top5_per_feature": top5_per_feature,
+        "top5_probs_per_feature": top5_probs_per_feature,
+        "final_label_prob": final_label_prob,
+        "final_prob": final_prob,
+        "final_label_vote": final_label_vote
+    }

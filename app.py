@@ -47,20 +47,26 @@ def record_video():
     feature_count = generate_features_with_sliding()
     recording_status = "랜드마크 추출 및 특징 생성 완료. 추론 중..."
     
-    # 5) feature별 예측 + 확률 기반 최종 라벨
-    predictions, feature_labels, top5_per_feature, top5_probs_per_feature, final_label, final_prob = infer_features_in_dir_realistic_kyukno(use_weighted_average=True)
+    # 5) feature별 예측
+    result = infer_features_in_dir_realistic_kyukno()
 
+    predictions = result["all_preds"]
     predicted_labels = {
-        "feature_labels": feature_labels,
-        "final_label": final_label,
-        "final_prob": round(final_prob, 4) if final_prob is not None else None,
-        "top5_per_feature": top5_per_feature,
-        "top5_probs_per_feature": [[round(p,4) for p in prob_list] for prob_list in top5_probs_per_feature]  # 소수점 4자리
+        "feature_labels": result["feature_labels"],
+        "final_label_prob": result["final_label_prob"],  # 확률 기반 최종 라벨
+        "final_prob": round(result["final_prob"], 4) if result["final_prob"] is not None else None,
+        "final_label_vote": result["final_label_vote"],  # 다수결 기반 최종 라벨
+        "top5_per_feature": result["top5_per_feature"],
+        "top5_probs_per_feature": [
+            [round(p,4) for p in prob_list] for prob_list in result["top5_probs_per_feature"]
+        ]
     }
 
-    recording_status = f"전체 프로세스 완료. feature {len(feature_labels)}개"
-    log_message(f"모든 feature 추론 완료: {predictions.shape}, 최종 라벨: {final_label}, 확률: {final_prob}")
-    
+    recording_status = f"전체 프로세스 완료. feature {len(result['feature_labels'])}개"
+    log_message(f"모든 feature 추론 완료: {predictions.shape}, "
+                f"확률 기반 최종 라벨: {predicted_labels['final_label_prob']}, "
+                f"다수결 최종 라벨: {predicted_labels['final_label_vote']}")
+
 # -----------------------------
 # 라우팅
 # -----------------------------

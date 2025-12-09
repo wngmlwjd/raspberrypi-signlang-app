@@ -14,10 +14,11 @@
 
     <p id="status">대기 중</p>
     
-    <p>마지막 예측 라벨: 
-        <span id="pred_label">-</span> 
-        (<span id="pred_prob">-</span>)
-    </p>
+    <p>마지막 예측 라벨:</p>
+    <ul>
+        <li>확률 기반 최종 라벨: <span id="pred_label_prob">-</span> (<span id="pred_prob">-</span>)</li>
+        <li>다수결 기반 최종 라벨: <span id="pred_label_vote">-</span></li>
+    </ul>
 
     <h3>Feature별 Top5 라벨</h3>
     <div id="top5Container"></div>

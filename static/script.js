@@ -8,9 +8,9 @@ const framesDiv = document.getElementById("frames");
 const landmarksContainer = document.getElementById("landmarksContainer");
 const landmarksDiv = document.getElementById("landmarks");
 const top5Container = document.getElementById("top5Container");
-const predLabelEl = document.getElementById("pred_label"); // 예측 라벨 엘리먼트 추가
-const predProbEl = document.getElementById("pred_prob"); // 확률 표시 엘리먼트 추가
-
+const predLabelProbEl = document.getElementById("pred_label_prob");
+const predProbEl = document.getElementById("pred_prob");
+const predLabelVoteEl = document.getElementById("pred_label_vote");
 
 function updateTop5Labels(top5_per_feature, top5_probs_per_feature) {
     top5Container.innerHTML = "";
@@ -23,7 +23,6 @@ function updateTop5Labels(top5_per_feature, top5_probs_per_feature) {
         top5Container.appendChild(div);
     });
 }
-
 
 // 녹화 버튼 클릭
 form.addEventListener("submit", async (e) => {
@@ -43,9 +42,10 @@ form.addEventListener("submit", async (e) => {
     landmarksContainer.classList.add("hidden");
 
     // 예측 라벨 초기화
-    predLabelEl.innerText = "-";
+    predLabelProbEl.innerText = "-";
+    predProbEl.innerText = "-";
+    predLabelVoteEl.innerText = "-";
     top5Container.innerHTML = "";
-
 
     // 서버에 녹화 시작 요청
     await fetch("/start_recording", { method: "POST" });
@@ -58,7 +58,6 @@ const waitForVideo = async (url, retries = 10, delay = 500) => {
             const res = await fetch(url, { method: "HEAD" });
             if (res.ok) return true;
         } catch (error) {
-            // 네트워크 오류 등 발생 시 재시도
             console.error("Video check failed, retrying:", error);
         }
         await new Promise(r => setTimeout(r, delay));
@@ -72,12 +71,15 @@ async function monitorStatus() {
     const data = await res.json();
     statusEl.textContent = data.status;
 
+    const labels = data.predicted_labels;
+
     // 최종 라벨 및 확률
-    predLabelEl.innerText = data.predicted_labels?.final_label || "-";
-    predProbEl.innerText = data.predicted_labels?.final_prob != null ? data.predicted_labels.final_prob : "-";
+    predLabelProbEl.innerText = labels?.final_label_prob || "-";
+    predProbEl.innerText = labels?.final_prob != null ? labels.final_prob : "-";
+    predLabelVoteEl.innerText = labels?.final_label_vote || "-";
 
     // feature별 top5 + 확률
-    updateTop5Labels(data.predicted_labels?.top5_per_feature, data.predicted_labels?.top5_probs_per_feature);
+    updateTop5Labels(labels?.top5_per_feature, labels?.top5_probs_per_feature);
 
     // 영상 자동 재생
     if (data.status.includes("프레임 추출 완료") && videoContainer.classList.contains("hidden")) {
@@ -91,12 +93,10 @@ async function monitorStatus() {
         }
     }
 
-    // 프레임 미리보기 → 영상이 표시될 때만 동작
+    // 프레임 미리보기
     if (!videoContainer.classList.contains("hidden") && data.frame_count > 0 && framesContainer.classList.contains("hidden")) {
         framesContainer.classList.remove("hidden");
-        
-        // 이전에 추가된 이미지가 있다면 제거 (중복 방지)
-        framesDiv.innerHTML = ""; 
+        framesDiv.innerHTML = "";
 
         const totalFrames = data.frame_count;
         const displayCount = 5;
@@ -104,9 +104,7 @@ async function monitorStatus() {
 
         for (let i = 0; i < totalFrames && i < displayCount * step; i += step) {
             const img = document.createElement("img");
-            // 캐싱 방지를 위해 timestamp 추가
             img.src = `/frames/frame_${i.toString().padStart(5,'0')}.jpg?time=${new Date().getTime()}`;
-            // img.width는 CSS로 관리됨
             framesDiv.appendChild(img);
         }
     }
@@ -114,8 +112,6 @@ async function monitorStatus() {
     // 랜드마크 미리보기
     if (data.status.includes("랜드마크 추출 및 특징 생성 완료") && landmarksContainer.classList.contains("hidden")) {
         landmarksContainer.classList.remove("hidden");
-
-        // 이전에 추가된 이미지가 있다면 제거 (중복 방지)
         landmarksDiv.innerHTML = "";
 
         const totalLandmarks = data.landmark_count;
@@ -124,13 +120,11 @@ async function monitorStatus() {
 
         for (let i = 0; i < totalLandmarks && i < displayCount * step; i += step) {
             const img = document.createElement("img");
-            // 캐싱 방지를 위해 timestamp 추가
             img.src = `/draw_landmarks/landmark_${i.toString().padStart(5,'0')}.jpg?time=${new Date().getTime()}`;
-            // img.width는 CSS로 관리됨
             landmarksDiv.appendChild(img);
         }
     }
 }
 
-// 1초마다 상태 업데이트 함수 실행
+// 1초마다 상태 업데이트
 setInterval(monitorStatus, 1000);
