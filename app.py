@@ -1,6 +1,7 @@
 from flask import Flask, render_template, jsonify
 import threading
 from inference import video_saver  # save_video()가 있는 모듈
+from config import config  # config.VIDEO_PATH 사용
 
 app = Flask(__name__)
 
@@ -24,14 +25,14 @@ def start_recording():
         # 녹화 실행 스레드 생성
         recording_thread = threading.Thread(target=record_video, daemon=True)
         recording_thread.start()
-        return jsonify({"status": "녹화를 시작했습니다!"})
+        return jsonify({"status": "녹화를 시작했습니다!", "video_path": config.VIDEO_PATH})
     else:
-        return jsonify({"status": "이미 녹화가 진행 중입니다."})
+        return jsonify({"status": "이미 녹화가 진행 중입니다.", "video_path": config.VIDEO_PATH})
 
 @app.route("/recording_status")
 def get_status():
-    # 현재 녹화 상태 반환
-    return jsonify({"status": recording_status})
+    # 현재 녹화 상태와 영상 경로 반환
+    return jsonify({"status": recording_status, "video_path": config.VIDEO_PATH})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
