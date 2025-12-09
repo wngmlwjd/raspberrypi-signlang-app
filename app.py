@@ -6,6 +6,7 @@ import shutil
 from inference.video_saver import save_video
 from inference.extract_frames import extract_frames
 from inference.extract_landmarks import extract_landmarks
+from inference.preprocessor import generate_features_with_sliding
 from config import config
 
 app = Flask(__name__)
@@ -14,9 +15,10 @@ recording_thread = None
 recording_status = "대기 중"
 frame_count = 0
 landmark_count = 0
+feature_count = 0
 
 def record_video():
-    global recording_status, frame_count, landmark_count
+    global recording_status, frame_count, landmark_count, feature_count
     
     recording_status = "녹화 중..."
     
@@ -28,7 +30,10 @@ def record_video():
     recording_status = f"녹화 및 프레임 추출 완료. 랜드마크 추출 중..."
     
     landmark_count = extract_landmarks()
-    recording_status = f"랜드마크 추출 완료."
+    recording_status = f"랜드마크 추출 완료. 특징 생성 중..."
+    
+    feature_count = generate_features_with_sliding()
+    recording_status = f"특징 생성 완료."
 
 @app.route("/")
 def index():
@@ -51,6 +56,10 @@ def start_recording():
         if os.path.exists(config.DRAW_LANDMARKS_DIR):
             shutil.rmtree(config.DRAW_LANDMARKS_DIR)
         os.makedirs(config.DRAW_LANDMARKS_DIR, exist_ok=True)
+        # 기존 features 폴더 삭제 후 재생성
+        if os.path.exists(config.FEATURES_DIR):
+            shutil.rmtree(config.FEATURES_DIR)
+        os.makedirs(config.FEATURES_DIR, exist_ok=True)
 
         recording_thread = threading.Thread(target=record_video, daemon=True)
         recording_thread.start()
@@ -60,7 +69,7 @@ def start_recording():
 
 @app.route("/recording_status")
 def get_status():
-    return jsonify({"status": recording_status, "frame_count": frame_count, "landmark_count": landmark_count})
+    return jsonify({"status": recording_status, "frame_count": frame_count, "landmark_count": landmark_count, "feature_count": feature_count})
 
 @app.route("/recorded_video")
 def recorded_video():
