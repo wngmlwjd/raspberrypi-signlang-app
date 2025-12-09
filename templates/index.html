@@ -47,21 +47,12 @@
             videoSource.src = "";
             videoContainer.style.display = "none";
 
-            // 기존 프레임 초기화
+            // 기존 프레임 초기화 → 버튼 클릭 시만 삭제
             framesDiv.innerHTML = "";
             framesContainer.style.display = "none";
 
             await fetch("/start_recording", { method: "POST" });
         });
-
-        const waitForVideo = async (url, retries = 10, delay = 500) => {
-            for (let i = 0; i < retries; i++) {
-                const res = await fetch(url, { method: "HEAD" });
-                if (res.ok) return true;
-                await new Promise(r => setTimeout(r, delay));
-            }
-            return false;
-        };
 
         setInterval(async () => {
             const res = await fetch("/recording_status");
@@ -83,19 +74,15 @@
             }
 
             // 프레임 미리보기 (최대 5장, 일정 간격, 캐시 방지)
-            if (data.frame_count > 0) {
-
-                // 1. 기존 프레임 초기화
-                framesDiv.innerHTML = "";
+            if (data.frame_count > 0 && framesContainer.style.display === "none") {
                 framesContainer.style.display = "block";
-
                 const totalFrames = data.frame_count;
                 const displayCount = 5;
                 const step = Math.floor(totalFrames / displayCount) || 1;
 
                 for (let i = 0; i < totalFrames && i < displayCount * step; i += step) {
                     const img = document.createElement("img");
-                    img.src = `/frames/frame_${i.toString().padStart(5,'0')}.jpg?time=${new Date().getTime()}`; // 캐시 방지
+                    img.src = `/frames/frame_${i.toString().padStart(5,'0')}.jpg?time=${new Date().getTime()}`;
                     img.width = 120;
                     framesDiv.appendChild(img);
                 }
