@@ -42,24 +42,25 @@ def record_video():
     
     # 3) 랜드마크 추출
     landmark_count = extract_landmarks()
-    # recording_status = "랜드마크 추출 완료. 특징 생성 중..."
     
     # 4) feature 생성
     feature_count = generate_features_with_sliding()
     recording_status = "랜드마크 추출 및 특징 생성 완료. 추론 중..."
     
-    # 5) feature별 예측 + top5 합산 최종 라벨
-    predictions, feature_labels, top5_per_feature, final_label = infer_features_in_dir(use_weighted_average=True)
+    # 5) feature별 예측 + 확률 기반 최종 라벨
+    predictions, feature_labels, top5_per_feature, top5_probs_per_feature, final_label, final_prob = infer_features_in_dir(use_weighted_average=True)
 
     predicted_labels = {
         "feature_labels": feature_labels,
         "final_label": final_label,
-        "top5_per_feature": top5_per_feature
+        "final_prob": round(final_prob, 4) if final_prob is not None else None,
+        "top5_per_feature": top5_per_feature,
+        "top5_probs_per_feature": [[round(p,4) for p in prob_list] for prob_list in top5_probs_per_feature]  # 소수점 4자리
     }
 
     recording_status = f"전체 프로세스 완료. feature {len(feature_labels)}개"
-    log_message(f"모든 feature 추론 완료: {predictions.shape}, 최종 라벨: {final_label}")
-
+    log_message(f"모든 feature 추론 완료: {predictions.shape}, 최종 라벨: {final_label}, 확률: {final_prob}")
+    
 # -----------------------------
 # 라우팅
 # -----------------------------

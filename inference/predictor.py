@@ -40,13 +40,13 @@ def infer_feature(model, feature: np.ndarray) -> np.ndarray:
     return pred[0]
 
 # ----------------------------------------------------
-# top5 합산 대신 확률 가중 평균 기반 최종 라벨 결정
+# 4. 확률 가중 평균 기반 최종 라벨 결정
 # ----------------------------------------------------
 def predict_weighted_average(all_preds, le_dict):
     """
     all_preds : (num_features, num_classes) - 각 feature별 softmax
     le_dict   : int_to_label dict
-    return    : 최종 예측 라벨
+    return    : 최종 예측 라벨, 최종 확률
     """
     # feature별 확률 평균 계산
     avg_probs = np.mean(all_preds, axis=0)  # (num_classes,)
@@ -54,17 +54,18 @@ def predict_weighted_average(all_preds, le_dict):
     # 확률 최대인 클래스 선택
     final_idx = np.argmax(avg_probs)
     final_label = le_dict['int_to_label'].get(final_idx, "unknown")
-    return final_label
-
+    final_prob = float(avg_probs[final_idx])
+    
+    return final_label, final_prob
 
 # ----------------------------------------------------
-# 폴더 내 feature 전체 추론 + 라벨 디코딩 (수정)
+# 5. 폴더 내 feature 전체 추론 + 라벨 디코딩
 # ----------------------------------------------------
 def infer_features_in_dir(
     features_dir: str = FEATURES_DIR,
     model_path: str = MODEL_PATH,
     label_encoder_path: str = LABEL_ENCODER_PATH,
-    use_weighted_average: bool = True  # True이면 확률 기반, False이면 기존 top5 다수결
+    use_weighted_average: bool = True
 ):
     model = load_h5_model(model_path)
     le_dict = load_label_encoder(label_encoder_path)
@@ -76,6 +77,7 @@ def infer_features_in_dir(
     all_preds = []
     feature_labels = []
     top5_per_feature = []
+    top5_probs_per_feature = []  # top5 확률 추가
 
     for f in feature_files:
         feature = np.load(os.path.join(features_dir, f))
@@ -86,10 +88,11 @@ def infer_features_in_dir(
         label_name = le_dict['int_to_label'].get(label_idx, "unknown")
         feature_labels.append(label_name)
 
-        # top5 라벨
+        # top5 라벨 및 확률
         top5_idx = np.argsort(pred)[-5:][::-1]
         top5_labels = [le_dict['int_to_label'].get(i, "unknown") for i in top5_idx]
         top5_per_feature.append(top5_labels)
+        top5_probs_per_feature.append([float(pred[i]) for i in top5_idx])
 
         all_preds.append(pred)
 
@@ -98,11 +101,12 @@ def infer_features_in_dir(
     # 최종 라벨 결정
     if use_weighted_average:
         final_label = predict_weighted_average(all_preds, le_dict)
+        final_prob = float(np.max(np.mean(all_preds, axis=0)))  # 평균 확률에서 최댓값
     else:
         from collections import Counter
-        # 기존 top5 다수결 방식
         top5_labels_flat = [label for sublist in top5_per_feature for label in sublist]
         counter = Counter(top5_labels_flat)
         final_label = counter.most_common(1)[0][0]
+        final_prob = None
 
-    return all_preds, feature_labels, top5_per_feature, final_label
+    return all_preds, feature_labels, top5_per_feature, top5_probs_per_feature, final_label, final_prob

@@ -9,13 +9,17 @@ const landmarksContainer = document.getElementById("landmarksContainer");
 const landmarksDiv = document.getElementById("landmarks");
 const top5Container = document.getElementById("top5Container");
 const predLabelEl = document.getElementById("pred_label"); // 예측 라벨 엘리먼트 추가
+const predProbEl = document.getElementById("pred_prob"); // 확률 표시 엘리먼트 추가
 
-function updateTop5Labels(top5_per_feature) {
+
+function updateTop5Labels(top5_per_feature, top5_probs_per_feature) {
     top5Container.innerHTML = "";
-    if (!top5_per_feature) return;
+    if (!top5_per_feature || !top5_probs_per_feature) return;
+
     top5_per_feature.forEach((top5, idx) => {
+        const probs = top5_probs_per_feature[idx];
         const div = document.createElement("div");
-        div.textContent = `Feature ${idx + 1}: ${top5.join(", ")}`;
+        div.innerHTML = `Feature ${idx + 1}: ` + top5.map((label, i) => `${label} (${probs[i]})`).join(", ");
         top5Container.appendChild(div);
     });
 }
@@ -68,10 +72,12 @@ async function monitorStatus() {
     const data = await res.json();
     statusEl.textContent = data.status;
 
-    // 예측 라벨 업데이트
+    // 최종 라벨 및 확률
     predLabelEl.innerText = data.predicted_labels?.final_label || "-";
-    updateTop5Labels(data.predicted_labels?.top5_per_feature);
+    predProbEl.innerText = data.predicted_labels?.final_prob != null ? data.predicted_labels.final_prob : "-";
 
+    // feature별 top5 + 확률
+    updateTop5Labels(data.predicted_labels?.top5_per_feature, data.predicted_labels?.top5_probs_per_feature);
 
     // 영상 자동 재생
     if (data.status.includes("프레임 추출 완료") && videoContainer.classList.contains("hidden")) {
