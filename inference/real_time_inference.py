@@ -17,7 +17,7 @@ def rpicam_realtime_loop(interval=5):
     """
     interval: 영상 단위 녹화 시간 (초)
     """
-    infer = AppInferenceTFLite()
+    # infer = AppInferenceTFLite()
     file_index = 0
 
     while True:
