@@ -19,7 +19,7 @@ const predResult = document.getElementById("predResult");
 
 
 // ---------------------------
-// Top3 업데이트
+// Top-3 업데이트
 // ---------------------------
 function updateTop3(labels, probs) {
     top3Container.innerHTML = "";
@@ -29,14 +29,14 @@ function updateTop3(labels, probs) {
     labels.forEach((label, i) => {
         const div = document.createElement("div");
         div.classList.add("top3-item");
-        div.textContent = `${i + 1}. ${label} (${probs[i]})`;
+        div.textContent = `${i + 1}. ${label} (${probs[i]}%)`;
         top3Container.appendChild(div);
     });
 }
 
 
 // ---------------------------
-// 녹화 시작 버튼
+// 녹화 시작
 // ---------------------------
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -47,17 +47,8 @@ form.addEventListener("submit", async (e) => {
     videoSource.src = "";
     videoContainer.classList.add("hidden");
 
-    // 프레임 초기화
-    // framesDiv.innerHTML = "";
-    // framesContainer.classList.add("hidden");
-
-    // // 랜드마크 초기화
-    // landmarksDiv.innerHTML = "";
-    // landmarksContainer.classList.add("hidden");
-
     // 예측 초기화
-    predTop1Label.innerText = "-";
-    predTop1Prob.innerText = "-";
+    predResult.innerText = "예측 결과: - (-%)";
     top3Container.innerHTML = "";
     resultsContainer.classList.add("hidden");
 
@@ -66,7 +57,7 @@ form.addEventListener("submit", async (e) => {
 
 
 // ---------------------------
-// 파일 존재 확인
+// 파일 존재 판단
 // ---------------------------
 const waitForVideo = async (url, retries = 10, delay = 500) => {
     for (let i = 0; i < retries; i++) {
@@ -89,11 +80,11 @@ async function monitorStatus() {
     const labels = data.predicted_labels;
 
     // ============================
-    // top1 + top3 업데이트
+    // 전체 프로세스 완료 → 결과 표시
     // ============================
     if (data.status.includes("전체 프로세스 완료") && labels) {
         resultsContainer.classList.remove("hidden");
-        
+
         const label = labels.top1_label ?? "-";
         const prob = labels.top1_prob ?? "-";
 
@@ -103,11 +94,12 @@ async function monitorStatus() {
     }
 
     // ============================
-    // 영상 렌더링
+    // 녹화 영상 표시
     // ============================
     if (data.status.includes("프레임 추출 완료") && videoContainer.classList.contains("hidden")) {
         const videoUrl = `/recorded_video?time=${Date.now()}`;
         const exists = await waitForVideo(videoUrl);
+
         if (exists) {
             videoSource.src = videoUrl;
             videoContainer.classList.remove("hidden");
@@ -115,42 +107,6 @@ async function monitorStatus() {
             videoEl.play();
         }
     }
-
-    // ============================
-    // 프레임 preview
-    // ============================
-    // if (data.frame_count > 0 && !videoContainer.classList.contains("hidden") && framesContainer.classList.contains("hidden")) {
-    //     framesContainer.classList.remove("hidden");
-    //     framesDiv.innerHTML = "";
-
-    //     const total = data.frame_count;
-    //     const displayCount = 5;
-    //     const step = Math.floor(total / displayCount) || 1;
-
-    //     for (let i = 0; i < total && i < displayCount * step; i += step) {
-    //         const img = document.createElement("img");
-    //         img.src = `/frames/frame_${i.toString().padStart(5, "0")}.jpg?time=${Date.now()}`;
-    //         framesDiv.appendChild(img);
-    //     }
-    // }
-
-    // ============================
-    // 랜드마크 preview
-    // ============================
-    // if (data.status.includes("추론 중") && data.landmark_count > 0 && landmarksContainer.classList.contains("hidden")) {
-    //     landmarksContainer.classList.remove("hidden");
-    //     landmarksDiv.innerHTML = "";
-
-    //     const total = data.landmark_count;
-    //     const displayCount = 5;
-    //     const step = Math.floor(total / displayCount) || 1;
-
-    //     for (let i = 0; i < total && i < displayCount * step; i += step) {
-    //         const img = document.createElement("img");
-    //         img.src = `/draw_landmarks/landmark_${i.toString().padStart(5, "0")}.jpg?time=${Date.now()}`;
-    //         landmarksDiv.appendChild(img);
-    //     }
-    // }
 }
 
 setInterval(monitorStatus, 1000);
