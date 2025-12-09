@@ -1,15 +1,24 @@
 # camera/camera_stream.py
 import cv2
 import threading
+import subprocess
+import numpy as np
 
 class CameraStream:
-    def __init__(self, src=0, width=640, height=480):
-        self.cap = cv2.VideoCapture(src)
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+    def __init__(self, cmd=None):
+        """
+        cmd : list
+            rpicam-vid 실행 명령어. 예: ["rpicam-vid", "-t", "0", "-o", "-", "--width", "640", "--height", "480", "--framerate", "30"]
+        """
+        if cmd is None:
+            raise ValueError("rpicam-vid 명령어를 cmd 인자로 전달해야 합니다.")
+
+        self.cmd = cmd
+        self.proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=10**8)
 
         self.frame = None
         self.running = True
+        self.buffer = b""
 
         # 스레드 시작
         self.thread = threading.Thread(target=self.update, daemon=True)
@@ -17,9 +26,26 @@ class CameraStream:
 
     def update(self):
         while self.running:
-            ret, frame = self.cap.read()
-            if ret:
-                self.frame = frame
+            try:
+                chunk = self.proc.stdout.read(1024)
+                if not chunk:
+                    break
+                self.buffer += chunk
+
+                # JPEG 프레임 단위 추출
+                start = self.buffer.find(b'\xff\xd8')
+                end = self.buffer.find(b'\xff\xd9')
+                if start != -1 and end != -1:
+                    jpg = self.buffer[start:end+2]
+                    self.buffer = self.buffer[end+2:]
+
+                    frame = cv2.imdecode(np.frombuffer(jpg, np.uint8), cv2.IMREAD_COLOR)
+                    if frame is not None:
+                        self.frame = frame
+
+            except Exception as e:
+                print("⚠️ Camera stream error:", e)
+                break
 
     def get_frame(self):
         if self.frame is None:
@@ -27,9 +53,13 @@ class CameraStream:
 
         # JPEG로 인코딩
         ret, jpeg = cv2.imencode(".jpg", self.frame)
+        if not ret:
+            return None
         return jpeg.tobytes()
 
     def stop(self):
         self.running = False
         self.thread.join()
-        self.cap.release()
+        if self.proc:
+            self.proc.terminate()
+            self.proc.wait()
