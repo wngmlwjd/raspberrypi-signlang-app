@@ -5,13 +5,13 @@ import numpy as np
 def rpicam_stream():
     # rpicam 명령어
     cmd = [
-        "rpicam",
-        "--output", "-",      # stdout으로 출력
-        "--nopreview",        # 미리보기 창 X
-        "--timeout", "0",     # 무제한 실행
-        "--width", "640",     # 해상도 설정
-        "--height", "480",
-        "--framerate", "30"   # FPS
+        "rpicam-hello",
+        # "--output", "-",      # stdout으로 출력
+        # "--nopreview",        # 미리보기 창 X
+        # "--timeout", "0",     # 무제한 실행
+        # "--width", "640",     # 해상도 설정
+        # "--height", "480",
+        # "--framerate", "30"   # FPS
     ]
 
     # subprocess로 rpicam 실행
