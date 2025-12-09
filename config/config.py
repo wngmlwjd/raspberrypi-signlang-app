@@ -30,7 +30,7 @@ SEQUENCE_STEP = 5    # 시퀀스 생성 시 프레임 이동 간격
 
 CMD = [
     "rpicam-vid",
-    "-t", "0",                  # 무제한 녹화
+    "-t", "5000",                  
     "-o", f"{RAW_DIR}/test.mp4",          # 저장할 영상 파일
     "--width", "640",
     "--height", "480",
