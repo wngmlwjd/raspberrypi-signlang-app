@@ -2,7 +2,7 @@ import os
 import numpy as np
 import joblib
 from sklearn.preprocessing import LabelEncoder
-import tflite_runtime.interpreter as tflite
+import tensorflow as tf
 
 from config.config import MODEL_PATH, LABEL_ENCODER_PATH, MAXJ_PATH
 
@@ -79,11 +79,11 @@ class AppInferenceTFLite:
         self.tflite_path = MODEL_PATH
         print(f"📌 Loading TFLite model: {self.tflite_path}")
 
-        try:
-            self.interpreter = tflite.Interpreter(model_path=self.tflite_path)
-            self.interpreter.allocate_tensors()
-        except Exception as e:
-            raise RuntimeError(f"❌ Failed to load TFLite model: {e}")
+        self.interpreter = tf.lite.Interpreter(
+            model_path=self.tflite_path,
+            experimental_delegates=[tf.lite.load_delegate("libtensorflowlite_flex.so")]
+        )
+        self.interpreter.allocate_tensors()
 
         self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
