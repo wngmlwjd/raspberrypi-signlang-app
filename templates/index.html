@@ -62,10 +62,27 @@
 
             // 영상 자동 재생 및 제목 표시
             if (data.status.includes("녹화 및 프레임 추출 완료") && videoContainer.style.display === "none") {
-                videoSource.src = "/recorded_video";
-                videoContainer.style.display = "block";
-                videoEl.load();
-                videoEl.play();
+                // 영상 파일 존재 확인 후 재생
+                const checkVideo = async () => {
+                    let exists = false;
+                    for (let i = 0; i < 10; i++) {  // 최대 10번 체크
+                        const res = await fetch("/recorded_video", { method: "HEAD" });
+                        if (res.ok) {
+                            exists = true;
+                            break;
+                        }
+                        await new Promise(r => setTimeout(r, 500)); // 0.5초 wait
+                    }
+                    if (exists) {
+                        videoSource.src = "/recorded_video";
+                        videoContainer.style.display = "block";
+                        videoEl.load();
+                        videoEl.play();
+                    } else {
+                        statusEl.textContent = "영상 준비 실패";
+                    }
+                };
+                checkVideo();
             }
 
             // 프레임 미리보기 (최대 5장, 일정 간격)
