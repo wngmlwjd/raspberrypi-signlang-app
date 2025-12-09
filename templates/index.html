@@ -42,8 +42,18 @@
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
             statusEl.textContent = "녹화 중...";
+
+            // 1. 기존 영상 초기화
+            videoSource.src = "";
+            videoContainer.style.display = "none";
+
+            // 2. 기존 프레임 초기화
+            framesDiv.innerHTML = "";
+            framesContainer.style.display = "none";
+
             await fetch("/start_recording", { method: "POST" });
         });
+
 
         setInterval(async () => {
             const res = await fetch("/recording_status");
