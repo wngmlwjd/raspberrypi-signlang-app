@@ -88,7 +88,7 @@ async function monitorStatus() {
         const label = labels.top1_label ?? "-";
         const prob = labels.top1_prob ?? "-";
 
-        predResult.innerText = `예측 결과: ${label} (${prob}%)`;
+        document.getElementById("predTitle").innerText = `예측 결과: ${top1_label} (${(top1_prob * 100).toFixed(1)}%)`;
 
         updateTop3(labels.top3_labels, labels.top3_probs);
     }
