@@ -1,19 +1,26 @@
 from flask import Flask, render_template, jsonify, send_file
 import threading
-from inference import video_saver  # save_video()가 있는 모듈
-from config import config  # config.VIDEO_PATH 사용
+from inference import video_saver
+from extract_frames import extract_frames
+from config import config
 import os
 
 app = Flask(__name__)
 
 recording_thread = None
 recording_status = "대기 중"  # 녹화 상태 저장
+frame_count = 0  # 추출된 프레임 개수
 
 def record_video():
-    global recording_status
+    global recording_status, frame_count
     recording_status = "녹화 중..."
-    video_saver.save_video()  # 실제 녹화 함수
-    recording_status = "녹화 완료"
+    video_saver.save_video()  # 실제 녹화
+    recording_status = "녹화 완료. 프레임 추출 중..."
+    
+    # 프레임 추출
+    frame_count = extract_frames(video_path=config.VIDEO_PATH, output_dir="frames", frame_rate=1)
+    
+    recording_status = f"녹화 및 프레임 추출 완료 ({frame_count} 프레임)"
 
 @app.route("/")
 def index():
@@ -31,14 +38,20 @@ def start_recording():
 
 @app.route("/recording_status")
 def get_status():
-    return jsonify({"status": recording_status})
+    return jsonify({"status": recording_status, "frame_count": frame_count})
 
 @app.route("/recorded_video")
 def recorded_video():
-    # 녹화된 파일이 존재하면 브라우저로 전송
     if os.path.exists(config.VIDEO_PATH):
         return send_file(config.VIDEO_PATH, mimetype="video/mp4")
     return "영상이 없습니다.", 404
+
+@app.route("/frames/<filename>")
+def serve_frame(filename):
+    path = os.path.join("frames", filename)
+    if os.path.exists(path):
+        return send_file(path, mimetype="image/jpeg")
+    return "프레임이 없습니다.", 404
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

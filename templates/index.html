@@ -21,30 +21,48 @@
         브라우저가 video 태그를 지원하지 않습니다.
     </video>
 
+    <!-- 추출된 프레임 미리보기 -->
+    <div id="framesContainer" style="display:none; margin-top:20px;">
+        <h3>추출된 프레임</h3>
+        <div id="frames" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
+    </div>
+
     <script>
         const form = document.getElementById("recordForm");
         const statusEl = document.getElementById("status");
         const videoEl = document.getElementById("recordedVideo");
         const videoSource = document.getElementById("videoSource");
+        const framesContainer = document.getElementById("framesContainer");
+        const framesDiv = document.getElementById("frames");
 
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
             statusEl.textContent = "녹화 중...";
-
             await fetch("/start_recording", { method: "POST" });
         });
 
-        // 녹화 상태 폴링 및 영상 자동 재생
         setInterval(async () => {
             const res = await fetch("/recording_status");
             const data = await res.json();
             statusEl.textContent = data.status;
 
-            if (data.status === "녹화 완료" && videoEl.style.display === "none") {
-                videoSource.src = "/recorded_video";  // Flask 엔드포인트 사용
+            // 영상 자동 재생
+            if (data.status.includes("녹화 완료") && videoEl.style.display === "none") {
+                videoSource.src = "/recorded_video";
                 videoEl.style.display = "block";
                 videoEl.load();
                 videoEl.play();
+            }
+
+            // 프레임 미리보기
+            if (data.frame_count > 0 && framesContainer.style.display === "none") {
+                framesContainer.style.display = "block";
+                for (let i = 0; i < data.frame_count; i++) {
+                    const img = document.createElement("img");
+                    img.src = `/frames/frame_${i.toString().padStart(5, '0')}.jpg`;
+                    img.width = 120;
+                    framesDiv.appendChild(img);
+                }
             }
         }, 1000);
     </script>
