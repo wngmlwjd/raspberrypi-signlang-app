@@ -20,14 +20,16 @@ def record_video():
     save_video()  # 녹화 실행
     recording_status = "녹화 완료. 프레임 추출 중..."
     
-    # 모든 프레임 추출
+    # 프레임 추출
     frame_count = extract_frames(output_dir=config.FRAMES_DIR)
-    
-    # 프레임 추출 후 랜드마크 추출
+    recording_status = f"프레임 추출 완료 ({frame_count} 프레임)"  # ← 여기 수정
+
+    # 랜드마크 추출
     recording_status = "랜드마크 추출 중..."
     extract_landmarks(frame_dir=config.FRAMES_DIR, save_dir=config.LANDMARKS_DIR)
 
-    recording_status = f"녹화, 프레임 추출 및 랜드마크 완료 ({frame_count} 프레임)"
+    # 최종 상태
+    recording_status = f"녹화, 프레임 및 랜드마크 추출 완료 ({frame_count} 프레임)"
 
 
 @app.route("/")

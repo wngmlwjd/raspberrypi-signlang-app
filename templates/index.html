@@ -72,7 +72,7 @@
         statusEl.textContent = data.status;
 
         // 영상 자동 재생
-        if (data.status.includes("녹화 및 프레임 추출 완료") && videoContainer.style.display === "none") {
+        if (data.status.includes("프레임 추출 완료") && videoContainer.style.display === "none") {
             const videoUrl = `/recorded_video?time=${new Date().getTime()}`;
             const exists = await waitForVideo(videoUrl);
             if (exists) {
