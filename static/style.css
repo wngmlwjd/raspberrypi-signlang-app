@@ -98,3 +98,7 @@ button {
 .hidden {
     display: none !important;
 }
+
+#predTitle {
+    margin: 7px 0;
+}
