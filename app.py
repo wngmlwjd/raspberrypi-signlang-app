@@ -1,7 +1,7 @@
 from flask import Flask, render_template, jsonify, send_file
 import threading
 import os
-import shutil  # <-- 추가
+import shutil
 
 from inference.video_saver import save_video
 from inference.extract_frames import extract_frames
@@ -20,7 +20,7 @@ def record_video():
     recording_status = "녹화 완료. 프레임 추출 중..."
     
     # 모든 프레임 추출
-    frame_count = extract_frames()
+    frame_count = extract_frames(output_dir=config.FRAMES_DIR)
     
     recording_status = f"녹화 및 프레임 추출 완료 ({frame_count} 프레임)"
 
@@ -56,7 +56,7 @@ def recorded_video():
 
 @app.route("/frames/<filename>")
 def serve_frame(filename):
-    path = os.path.join("frames", filename)
+    path = os.path.join(config.FRAMES_DIR, filename)  # <-- 변경
     if os.path.exists(path):
         return send_file(path, mimetype="image/jpeg")
     return "프레임이 없습니다.", 404
