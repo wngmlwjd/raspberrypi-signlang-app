@@ -20,9 +20,10 @@ frame_count = 0
 landmark_count = 0
 feature_count = 0
 predictions = None
+predicted_labels = None 
 
 def record_video():
-    global recording_status, frame_count, landmark_count, feature_count
+    global recording_status, frame_count, landmark_count, feature_count, predictions, predicted_labels
     
     recording_status = "녹화 중..."
     
@@ -38,9 +39,9 @@ def record_video():
     feature_count = generate_features_with_sliding()
     recording_status = "랜드마크 추출 및 특징 생성 완료. 추론 중..."
     
-    predictions = infer_features_in_dir()
+    predictions, predicted_labels = infer_features_in_dir()
     log_message(f"모든 feature 추론 완료: {predictions.shape}")
-    recording_status = f"전체 프로세스 완료. 예측 {predictions.shape[0]}개 완료"
+    recording_status = f"전체 프로세스 완료. 예측 {len(predicted_labels)}개 완료"
 
 
 @app.route("/")
@@ -77,7 +78,14 @@ def start_recording():
 
 @app.route("/recording_status")
 def get_status():
-    return jsonify({"status": recording_status, "frame_count": frame_count, "landmark_count": landmark_count, "feature_count": feature_count, "predictions_shape": None if predictions is None else predictions.shape})
+    return jsonify({
+        "status": recording_status,
+        "frame_count": frame_count,
+        "landmark_count": landmark_count,
+        "feature_count": feature_count,
+        "predictions_shape": None if predictions is None else predictions.shape,
+        "predicted_labels": None if predicted_labels is None else predicted_labels
+    })
 
 @app.route("/recorded_video")
 def recorded_video():

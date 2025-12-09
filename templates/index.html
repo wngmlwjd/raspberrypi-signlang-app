@@ -14,6 +14,7 @@
 
     <!-- 녹화 상태 표시 -->
     <p id="status">대기 중</p>
+    <p>마지막 예측 라벨: <span id="pred_label">-</span></p>
 
     <!-- 랜드마크 미리보기 -->
     <div id="landmarksContainer" style="display:none; margin-bottom:10px;">
@@ -126,6 +127,15 @@
             }
         }
     }, 1000);
+
+    async function updateStatus() {
+        const res = await fetch("/recording_status");
+        const data = await res.json();
+        document.getElementById("status").innerText = data.status;
+        document.getElementById("pred_label").innerText = data.predicted_labels?.slice(-1)[0] || "-";
+    }
+
+    setInterval(updateStatus, 1000);
     </script>
 </body>
 </html>
