@@ -104,5 +104,10 @@ button {
 }
 
 #pred3Title {
-    margin-bottom: 5px;
+    margin-bottom: 7px;
+}
+
+#videoTitle {
+    margin-top: 0;
+    margin-bottom: 7px;
 }
