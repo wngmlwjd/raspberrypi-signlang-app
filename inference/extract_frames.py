@@ -21,6 +21,7 @@ def extract_frames(video_path=VIDEO_PATH, output_dir=FRAMES_DIR):
             break
 
         frame_path = os.path.join(output_dir, f"frame_{frame_count:05d}.jpg")
+        print(f"Saving frame: {frame_path}")
         cv2.imwrite(frame_path, frame)
         frame_count += 1
 
