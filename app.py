@@ -2,7 +2,6 @@ from flask import Flask, render_template, jsonify, send_file
 import threading
 import os
 import shutil
-import numpy as np
 
 from inference.video_saver import save_video
 from inference.extract_frames import extract_frames
@@ -14,36 +13,54 @@ from utils import log_message
 
 app = Flask(__name__)
 
+# -----------------------------
+# 전역 변수
+# -----------------------------
 recording_thread = None
 recording_status = "대기 중"
 frame_count = 0
 landmark_count = 0
 feature_count = 0
 predictions = None
-predicted_labels = None 
+predicted_labels = None
 
+# -----------------------------
+# 녹화 및 처리 함수
+# -----------------------------
 def record_video():
     global recording_status, frame_count, landmark_count, feature_count, predictions, predicted_labels
-    
+
     recording_status = "녹화 중..."
     
-    save_video()  # 녹화 실행
+    # 1) 영상 녹화
+    save_video()
     recording_status = "녹화 완료. 프레임 추출 중..."
     
-    # 모든 프레임 추출
+    # 2) 프레임 추출
     frame_count = extract_frames()
-    recording_status = "녹화 및 프레임 추출 완료. 랜드마크 추출 중..."
+    recording_status = "프레임 추출 완료. 랜드마크 추출 중..."
     
+    # 3) 랜드마크 추출
     landmark_count = extract_landmarks()
+    recording_status = "랜드마크 추출 완료. 특징 생성 중..."
     
+    # 4) feature 생성
     feature_count = generate_features_with_sliding()
-    recording_status = "랜드마크 추출 및 특징 생성 완료. 추론 중..."
+    recording_status = "특징 생성 완료. 추론 중..."
     
-    predictions, predicted_labels = infer_features_in_dir()
-    log_message(f"모든 feature 추론 완료: {predictions.shape}")
-    recording_status = f"전체 프로세스 완료. 예측 {len(predicted_labels)}개 완료"
+    # 5) feature별 예측 + top5 합산 최종 라벨
+    predictions, feature_labels, final_label = infer_features_in_dir(top5_aggregate=True)
+    predicted_labels = {
+        "feature_labels": feature_labels,
+        "final_label": final_label
+    }
 
+    log_message(f"모든 feature 추론 완료: {predictions.shape}, 최종 라벨: {final_label}")
+    recording_status = f"전체 프로세스 완료. feature {len(feature_labels)}개, 최종 라벨: {final_label}"
 
+# -----------------------------
+# 라우팅
+# -----------------------------
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -52,24 +69,13 @@ def index():
 def start_recording():
     global recording_thread
     if recording_thread is None or not recording_thread.is_alive():
+        # 기존 폴더 초기화
+        for folder in [config.FRAMES_DIR, config.LANDMARKS_DIR, config.DRAW_LANDMARKS_DIR, config.FEATURES_DIR]:
+            if os.path.exists(folder):
+                shutil.rmtree(folder)
+            os.makedirs(folder, exist_ok=True)
 
-        # 기존 frames 폴더 삭제 후 재생성
-        if os.path.exists(config.FRAMES_DIR):
-            shutil.rmtree(config.FRAMES_DIR)
-        os.makedirs(config.FRAMES_DIR, exist_ok=True)
-        # 기존 landmarks 폴더 삭제 후 재생성
-        if os.path.exists(config.LANDMARKS_DIR):
-            shutil.rmtree(config.LANDMARKS_DIR)
-        os.makedirs(config.LANDMARKS_DIR, exist_ok=True)
-        # 기존 draw_landmarks 폴더 삭제 후 재생성
-        if os.path.exists(config.DRAW_LANDMARKS_DIR):
-            shutil.rmtree(config.DRAW_LANDMARKS_DIR)
-        os.makedirs(config.DRAW_LANDMARKS_DIR, exist_ok=True)
-        # 기존 features 폴더 삭제 후 재생성
-        if os.path.exists(config.FEATURES_DIR):
-            shutil.rmtree(config.FEATURES_DIR)
-        os.makedirs(config.FEATURES_DIR, exist_ok=True)
-
+        # 녹화 스레드 시작
         recording_thread = threading.Thread(target=record_video, daemon=True)
         recording_thread.start()
         return jsonify({"status": "녹화를 시작했습니다!"})
@@ -84,7 +90,7 @@ def get_status():
         "landmark_count": landmark_count,
         "feature_count": feature_count,
         "predictions_shape": None if predictions is None else predictions.shape,
-        "predicted_labels": None if predicted_labels is None else predicted_labels
+        "predicted_labels": predicted_labels
     })
 
 @app.route("/recorded_video")
@@ -95,7 +101,7 @@ def recorded_video():
 
 @app.route("/frames/<filename>")
 def serve_frame(filename):
-    path = os.path.join(config.FRAMES_DIR, filename)  # <-- 변경
+    path = os.path.join(config.FRAMES_DIR, filename)
     if os.path.exists(path):
         return send_file(path, mimetype="image/jpeg")
     return "프레임이 없습니다.", 404
@@ -107,5 +113,8 @@ def serve_draw_landmark(filename):
         return send_file(path, mimetype="image/jpeg")
     return "랜드마크 이미지가 없습니다.", 404
 
+# -----------------------------
+# 앱 실행
+# -----------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -2,6 +2,7 @@ import os
 import numpy as np
 from tensorflow.keras.models import load_model
 import joblib
+from collections import Counter
 
 from config.config import FEATURES_DIR, MODEL_PATH, LABEL_ENCODER_PATH
 from utils import log_message
@@ -39,12 +40,33 @@ def infer_feature(model, feature: np.ndarray) -> np.ndarray:
     return pred[0]
 
 # ----------------------------------------------------
-# 4. 폴더 내 feature 전체 추론 + 라벨 디코딩
+# 4. top5 합산 기반 최종 라벨 결정
+# ----------------------------------------------------
+def predict_top5_aggregate(all_preds, le_dict):
+    """
+    all_preds : (num_features, num_classes) - 각 feature별 softmax
+    le_dict    : int_to_label dict
+    return     : 최종 예측 라벨 1개
+    """
+    top5_labels = []
+
+    for pred in all_preds:
+        top5_idx = np.argsort(pred)[-5:][::-1]  # 확률 높은 순으로 top5 index
+        top5_labels.extend([le_dict['int_to_label'].get(i, "unknown") for i in top5_idx])
+
+    # 다수결로 최종 라벨 결정
+    counter = Counter(top5_labels)
+    final_label = counter.most_common(1)[0][0]
+    return final_label
+
+# ----------------------------------------------------
+# 5. 폴더 내 feature 전체 추론 + 라벨 디코딩
 # ----------------------------------------------------
 def infer_features_in_dir(
     features_dir: str = FEATURES_DIR,
     model_path: str = MODEL_PATH,
-    label_encoder_path: str = LABEL_ENCODER_PATH
+    label_encoder_path: str = LABEL_ENCODER_PATH,
+    top5_aggregate: bool = False
 ):
     model = load_h5_model(model_path)
     le_dict = load_label_encoder(label_encoder_path)
@@ -54,15 +76,20 @@ def infer_features_in_dir(
         raise FileNotFoundError(f"No feature files found: {features_dir}")
 
     all_preds = []
-    all_labels = []
+    feature_labels = []
 
     for f in feature_files:
         feature = np.load(os.path.join(features_dir, f))
         pred = infer_feature(model, feature)
         label_idx = np.argmax(pred)
         label_name = le_dict['int_to_label'].get(label_idx, "unknown")
-        log_message(f"Inferred {f}: {label_name} (prob={pred[label_idx]:.3f})")
         all_preds.append(pred)
-        all_labels.append(label_name)
+        feature_labels.append(label_name)
 
-    return np.array(all_preds), all_labels
+    all_preds = np.array(all_preds)
+
+    if top5_aggregate:
+        final_label = predict_top5_aggregate(all_preds, le_dict)
+        return all_preds, feature_labels, final_label
+    else:
+        return all_preds, feature_labels

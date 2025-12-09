@@ -12,9 +12,11 @@
         <button type="submit">번역 시작</button>
     </form>
 
-    <!-- 녹화 상태 표시 -->
+    <!-- 녹화 상태 및 예측 라벨 -->
     <p id="status">대기 중</p>
-    <p>마지막 예측 라벨: <span id="pred_label">-</span></p>
+    <p>최종 예측 라벨: <span id="pred_label">-</span></p>
+    <p>Feature별 예측 라벨:</p>
+    <div id="feature_labels" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
 
     <!-- 랜드마크 미리보기 -->
     <div id="landmarksContainer" style="display:none; margin-bottom:10px;">
@@ -22,7 +24,7 @@
         <div id="landmarks" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
     </div>
 
-    <!-- 추출된 프레임 미리보기 (영상 위) -->
+    <!-- 추출된 프레임 미리보기 -->
     <div id="framesContainer" style="display:none; margin-bottom:20px;">
         <h3>추출된 프레임</h3>
         <div id="frames" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
@@ -31,7 +33,7 @@
     <!-- 녹화 영상 재생 -->
     <div id="videoContainer" style="display:none; margin-top:10px;">
         <h3>녹화된 영상</h3>
-        <video id="recordedVideo" width="960" height="720" controls> <!-- 640x480 → 960x720 -->
+        <video id="recordedVideo" width="960" height="720" controls>
             <source id="videoSource" src="" type="video/mp4">
             브라우저가 video 태그를 지원하지 않습니다.
         </video>
@@ -47,29 +49,25 @@
     const framesDiv = document.getElementById("frames");
     const landmarksContainer = document.getElementById("landmarksContainer");
     const landmarksDiv = document.getElementById("landmarks");
+    const predLabelEl = document.getElementById("pred_label");
+    const featureLabelsDiv = document.getElementById("feature_labels");
 
-
-    // 녹화 버튼 클릭
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
         statusEl.textContent = "녹화 중...";
 
-        // 영상 초기화
         videoSource.src = "";
         videoContainer.style.display = "none";
-
-        // 프레임 초기화 → 버튼 클릭 시만
         framesDiv.innerHTML = "";
         framesContainer.style.display = "none";
-
-        // 랜드마크 초기화 → 버튼 클릭 시만
         landmarksDiv.innerHTML = "";
         landmarksContainer.style.display = "none";
+        featureLabelsDiv.innerHTML = "";
+        predLabelEl.textContent = "-";
 
         await fetch("/start_recording", { method: "POST" });
     });
 
-    // 영상 준비 확인 함수
     const waitForVideo = async (url, retries = 10, delay = 500) => {
         for (let i = 0; i < retries; i++) {
             const res = await fetch(url, { method: "HEAD" });
@@ -79,11 +77,28 @@
         return false;
     };
 
-    // 녹화 상태 모니터링
     setInterval(async () => {
         const res = await fetch("/recording_status");
         const data = await res.json();
         statusEl.textContent = data.status;
+
+        // 최종 라벨 표시
+        if (data.predicted_labels?.final_label) {
+            predLabelEl.textContent = data.predicted_labels.final_label;
+        }
+
+        // feature별 라벨 표시
+        if (data.predicted_labels?.feature_labels) {
+            featureLabelsDiv.innerHTML = "";
+            data.predicted_labels.feature_labels.forEach(label => {
+                const span = document.createElement("span");
+                span.textContent = label;
+                span.style.padding = "2px 5px";
+                span.style.border = "1px solid #ccc";
+                span.style.borderRadius = "3px";
+                featureLabelsDiv.appendChild(span);
+            });
+        }
 
         // 영상 자동 재생
         if (data.status.includes("녹화 및 프레임 추출 완료") && videoContainer.style.display === "none") {
@@ -97,7 +112,7 @@
             }
         }
 
-        // 프레임 미리보기 → 버튼 클릭 후만 표시
+        // 프레임 미리보기
         if (videoContainer.style.display === "block" && data.frame_count > 0 && framesContainer.style.display === "none") {
             framesContainer.style.display = "block";
             const totalFrames = data.frame_count;
@@ -107,7 +122,7 @@
             for (let i = 0; i < totalFrames && i < displayCount * step; i += step) {
                 const img = document.createElement("img");
                 img.src = `/frames/frame_${i.toString().padStart(5,'0')}.jpg?time=${new Date().getTime()}`;
-                img.width = 180;  // 120 → 180
+                img.width = 180;
                 framesDiv.appendChild(img);
             }
         }
@@ -122,20 +137,11 @@
             for (let i = 0; i < totalLandmarks && i < displayCount * step; i += step) {
                 const img = document.createElement("img");
                 img.src = `/draw_landmarks/landmark_${i.toString().padStart(5,'0')}.jpg?time=${new Date().getTime()}`;
-                img.width = 180;  // 120 → 180
+                img.width = 180;
                 landmarksDiv.appendChild(img);
             }
         }
     }, 1000);
-
-    async function updateStatus() {
-        const res = await fetch("/recording_status");
-        const data = await res.json();
-        document.getElementById("status").innerText = data.status;
-        document.getElementById("pred_label").innerText = data.predicted_labels?.slice(-1)[0] || "-";
-    }
-
-    setInterval(updateStatus, 1000);
     </script>
 </body>
 </html>
