@@ -54,11 +54,11 @@ def rpicam_realtime_loop(interval=5):
             # -------------------------------
             # 5) 버퍼 상태 및 Inference
             # -------------------------------
-            if len(buffer) == SEQUENCE_LENGTH:
-                seq_array = np.array(buffer)
-                pred_word, pred_prob = infer.predict_from_array(seq_array)
-                print(f"👉 Result: {pred_word}  |  confidence={pred_prob.max():.4f}")
-                print("-------------------------------------------")
+            # if len(buffer) == SEQUENCE_LENGTH:
+            #     seq_array = np.array(buffer)
+            #     pred_word, pred_prob = infer.predict_from_array(seq_array)
+            #     print(f"👉 Result: {pred_word}  |  confidence={pred_prob.max():.4f}")
+            #     print("-------------------------------------------")
 
         print(f"✅ Finished processing {output_file}\n")
 
