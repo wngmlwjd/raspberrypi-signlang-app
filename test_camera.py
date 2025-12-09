@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 cmd = [
-    "rpicam-vid", "-t", "0", "-o", "test.h264", "-w", "640", "-h", "480", "-fps", "30"
+    "rpicam-vid", "-t", "0", "-o", "test.h264", "--width", "640", "--height", "480", "--framerate", "30"
 ]
 proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=10**8)
 
