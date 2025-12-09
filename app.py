@@ -8,7 +8,7 @@ from inference.video_saver import save_video
 from inference.extract_frames import extract_frames
 from inference.extract_landmarks import extract_landmarks
 from inference.preprocessor import generate_features_with_sliding
-from inference.predictor import infer_feature
+from inference.predictor import infer_features_in_dir
 from config import config
 
 app = Flask(__name__)
@@ -39,7 +39,7 @@ def record_video():
     
     feature_files = sorted([f for f in os.listdir(config.FEATURES_DIR) if f.endswith(".npy")])
     
-    predictions = infer_feature()
+    predictions = infer_features_in_dir()
     
     recording_status = "모든 과정 완료."
 
