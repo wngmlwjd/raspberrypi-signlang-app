@@ -7,7 +7,7 @@ from inference.video_saver import save_video
 from inference.extract_frames import extract_frames
 from inference.extract_landmarks import extract_landmarks
 from inference.preprocessor import generate_single_feature
-from inference.predictor import infer_single_feature_with_top5  # ← 새로 작성한 곳
+from inference.predictor import infer_single_feature_with_top3  # ← 새로 작성한 곳
 from config import config
 from utils import log_message
 
@@ -51,7 +51,7 @@ def record_video():
     recording_status = "랜드마크 처리 완료. 추론 중..."
 
     # 5) 단일 feature 추론
-    result = infer_single_feature_with_top5()
+    result = infer_single_feature_with_top3()
 
     predictions = result["pred_vector"]
     predicted_labels = {
