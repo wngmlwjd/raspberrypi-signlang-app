@@ -126,22 +126,19 @@ def generate_features_with_sliding(
     normalized_frames = []
 
     for fname in npy_files:
-        arr = np.load(os.path.join(frame_npy_dir, fname))   # (J, 3) or (1,J,3)
-
+        arr = np.load(os.path.join(frame_npy_dir, fname))   # (J,3) or (1,J,3)
         if arr.ndim == 3:
-            arr = arr[0]        # (J,3)
+            arr = arr[0]
 
-        J = arr.shape[0]
-
-        # pad or truncate to J_max
-        if J < J_max:
-            arr = np.pad(arr, ((0, J_max - J), (0, 0)), mode="constant")
-        elif J > J_max:
+        # pad/truncate
+        if arr.shape[0] < J_max:
+            arr = np.pad(arr, ((0, J_max - arr.shape[0]), (0, 0)), mode="constant")
+        elif arr.shape[0] > J_max:
             arr = arr[:J_max, :]
 
         # normalize
-        arr = transform_and_normalize_landmarks(arr)[0]
-        normalized_frames.append(arr)   # (J_max, 3)
+        arr = transform_and_normalize_landmarks(arr)[0]  # shape = (J_max,3)
+        normalized_frames.append(arr)
 
     total_frames = len(normalized_frames)
 
@@ -161,7 +158,7 @@ def generate_features_with_sliding(
         # 부족하면 제로패딩
         if len(seq) < SEQUENCE_LENGTH:
             pad_len = SEQUENCE_LENGTH - len(seq)
-            seq += [np.zeros((J_max, 3), dtype=np.float32)] * pad_len
+            seq += [np.zeros((J_max, 3), dtype=np.float32) for _ in range(pad_len)]
 
         seq_array = np.stack(seq, axis=0)          # (T,J_max,3)
         seq_flat = seq_array.reshape(SEQUENCE_LENGTH, -1)
