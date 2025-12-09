@@ -61,7 +61,7 @@ def index():
                 continue
 
     # index.html에서 바로 MJPEG 스트리밍
-    return render_template('index.html', gen_frames=gen_frames)
+    return render_template('ui/templates/index.html', gen_frames=gen_frames)
 
 # =========================
 # Run server
