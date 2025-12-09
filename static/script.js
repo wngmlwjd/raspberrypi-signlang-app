@@ -85,10 +85,7 @@ async function monitorStatus() {
     if (data.status.includes("전체 프로세스 완료") && labels) {
         resultsContainer.classList.remove("hidden");
 
-        const label = labels.top1_label ?? "-";
-        const prob = labels.top1_prob ?? "-";
-
-        resultsTitle.innerText = `예측 결과: ${top1_label} (${(top1_prob * 100).toFixed(1)}%)`;
+        resultsTitle.innerText = `예측 결과: ${labels.top1_label} (${(labels.top1_prob * 100).toFixed(1)}%)`;
 
         updateTop3(labels.top3_labels, labels.top3_probs);
     }
