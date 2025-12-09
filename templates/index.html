@@ -112,7 +112,7 @@
         }
 
         // 랜드마크 미리보기
-        if (framesContainer.style.display === "block" && data.landmark_count > 0 && landmarksContainer.style.display === "none") {
+        if (framesContainer.style.display === "block" && data.landmark_count === data.frame_count && landmarksContainer.style.display === "none") {
             landmarksContainer.style.display = "block";
             const totalLandmarks = data.landmark_count;
             const displayCount = 5;
