@@ -40,21 +40,32 @@ def infer_feature(model, feature: np.ndarray) -> np.ndarray:
     return pred[0]
 
 # ----------------------------------------------------
-# 4-1. 최근 N개 feature 가중 평균 기반 최종 라벨 결정
+# 4-2. 격노 확률 임계치 기반 최종 라벨 결정
 # ----------------------------------------------------
-def predict_weighted_average_recent(all_preds, le_dict, recent_n=5, smoothing=0.01):
+def predict_ignore_kyukno(all_preds, le_dict, kyukno_label="격노", threshold=0.95, recent_n=5, smoothing=0.01):
     """
     all_preds : (num_features, num_classes) - 각 feature별 softmax
-    recent_n  : 최근 N개 feature만 반영
-    smoothing : 확률 안정화용 최소값
-    return    : 최종 예측 라벨, 최종 확률
+    kyukno_label : '격노' 라벨 이름
+    threshold    : 격노 확률이 이 값 이상이면 격노 유지
+    recent_n     : 최근 N개 feature만 반영
+    smoothing    : 확률 안정화용 최소값
+    return       : 최종 예측 라벨, 최종 확률
     """
-    # 최근 N개 feature 선택
     recent_preds = all_preds[-recent_n:]
-    
-    # smoothing 적용 후 평균
     avg_probs = np.clip(np.mean(recent_preds, axis=0), smoothing, 1.0)
     avg_probs /= avg_probs.sum()  # 정규화
+
+    # '격노' index 찾기
+    kyukno_idx = None
+    for k, v in le_dict['int_to_label'].items():
+        if v == kyukno_label:
+            kyukno_idx = k
+            break
+
+    # 격노 확률 확인
+    if kyukno_idx is not None and avg_probs[kyukno_idx] < threshold:
+        avg_probs[kyukno_idx] = 0  # 격노 제외
+        avg_probs /= avg_probs.sum()  # 재정규화
 
     final_idx = np.argmax(avg_probs)
     final_label = le_dict['int_to_label'].get(final_idx, "unknown")
@@ -63,14 +74,16 @@ def predict_weighted_average_recent(all_preds, le_dict, recent_n=5, smoothing=0.
     return final_label, final_prob
 
 # ----------------------------------------------------
-# 5. 폴더 내 feature 전체 추론 + Top5 확률 개선
+# 5. 폴더 내 feature 전체 추론 + Top5 확률 개선 + 격노 제외
 # ----------------------------------------------------
-def infer_features_in_dir_realistic(
+def infer_features_in_dir_realistic_kyukno(
     features_dir: str = FEATURES_DIR,
     model_path: str = MODEL_PATH,
     label_encoder_path: str = LABEL_ENCODER_PATH,
     use_weighted_average: bool = True,
-    recent_n: int = 5
+    recent_n: int = 5,
+    kyukno_label: str = "격노",
+    kyukno_threshold: float = 0.95
 ):
     model = load_h5_model(model_path)
     le_dict = load_label_encoder(label_encoder_path)
@@ -104,7 +117,13 @@ def infer_features_in_dir_realistic(
     all_preds = np.array(all_preds)
 
     if use_weighted_average:
-        final_label, final_prob = predict_weighted_average_recent(all_preds, le_dict, recent_n=recent_n)
+        final_label, final_prob = predict_ignore_kyukno(
+            all_preds,
+            le_dict,
+            kyukno_label=kyukno_label,
+            threshold=kyukno_threshold,
+            recent_n=recent_n
+        )
     else:
         from collections import Counter
         top5_labels_flat = [label for sublist in top5_per_feature for label in sublist]
