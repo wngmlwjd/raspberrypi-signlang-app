@@ -1,11 +1,15 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Raspberry Pi Camera</title>
+    <title>RPi Camera Stream</title>
+    <style>
+        body { text-align: center; background-color: #222; color: white; font-family: Arial, sans-serif; }
+        img { margin-top: 20px; border: 3px solid #444; }
+    </style>
 </head>
 <body>
-    <h1>실시간 카메라 영상</h1>
-    <img src="{{ url_for('video_feed') }}" width="640" height="480">
+    <h1>RPi Camera Live Stream</h1>
+    <img id="stream" src="{{ url_for('video_feed') }}" width="640" height="480">
 </body>
 </html>
