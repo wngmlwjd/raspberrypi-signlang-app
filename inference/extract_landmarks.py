@@ -25,7 +25,7 @@ def extract_landmarks(frame_dir: str = FRAMES_DIR, save_dir: str = LANDMARKS_DIR
 
         # 기존 이미지 파일 처리
         landmarks = tracker.process_image(frame_path)
-        tracker.draw_and_save_landmarks(frame_dir, DRAW_LANDMARKS_DIR, landmarks)
+        tracker.draw_and_save_landmarks(frame_path, DRAW_LANDMARKS_DIR, landmarks)
 
         save_path = os.path.join(
             save_dir,
