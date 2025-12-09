@@ -3,7 +3,7 @@ import threading
 import os
 
 from inference.video_saver import save_video
-from inference.extract_frames import extract_frames
+from inference.extract_frames import extract_frames  # 수정된 함수 사용
 from config import config
 
 app = Flask(__name__)
@@ -18,8 +18,8 @@ def record_video():
     save_video()  # 실제 녹화
     recording_status = "녹화 완료. 프레임 추출 중..."
     
-    # 프레임 추출
-    frame_count = extract_frames(video_path=config.VIDEO_PATH, output_dir="frames", frame_rate=1)
+    # 모든 프레임 추출
+    frame_count = extract_frames(video_path=config.VIDEO_PATH, output_dir="frames")
     
     recording_status = f"녹화 및 프레임 추출 완료 ({frame_count} 프레임)"
 
