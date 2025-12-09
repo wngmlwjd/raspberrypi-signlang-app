@@ -33,4 +33,5 @@ CMD = [
     "--width", "640",
     "--height", "480",
     "--framerate", "30",
+    "--disp", "none",
 ]
