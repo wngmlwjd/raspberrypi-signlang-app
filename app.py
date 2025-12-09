@@ -58,8 +58,8 @@ def record_video():
         "feature_file": result["feature_file"],
         "top1_label": result["top1_label"],
         "top1_prob": round(result["top1_prob"], 4),
-        "top5_labels": result["top5_labels"],
-        "top5_probs": [round(p, 4) for p in result["top5_probs"]],
+        "top3_labels": result["top5_labels"],
+        "top3_probs": [round(p, 4) for p in result["top5_probs"]],
     }
 
     recording_status = f"전체 프로세스 완료. feature 1개 생성됨"

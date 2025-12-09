@@ -2,11 +2,11 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Raspberry Pi Camera Stream</title>
+    <title>RaspberryPi-Signlang</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Camera Stream</h1>
+    <h1>수어 번역 시스템</h1>
 
     <form id="recordForm" method="POST" action="/start_recording">
         <button type="submit">번역 시작</button>
@@ -14,14 +14,16 @@
 
     <p id="status">대기 중</p>
 
-    <h3>예측 결과</h3>
-    <ul>
-        <li>Top-1 라벨: <span id="pred_top1_label">-</span></li>
-        <li>Top-1 확률: <span id="pred_top1_prob">-</span></li>
-    </ul>
+    <div id="resultsContainer">
+        <h3>예측 결과</h3>
+        <ul>
+            <li>Top-1 라벨: <span id="pred_top1_label">-</span></li>
+            <li>Top-1 확률: <span id="pred_top1_prob">-</span></li>
+        </ul>
 
-    <h3>Top-5 결과</h3>
-    <div id="top5Container"></div>
+        <h3>Top-3 결과</h3>
+        <div id="top3Container"></div>
+    </div>
 
     <div id="framesContainer" class="hidden">
         <h3>추출된 프레임</h3>

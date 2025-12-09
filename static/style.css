@@ -7,15 +7,15 @@ body {
     display: none !important;
 }
 
-/* --- Top5 라벨 박스 정돈 --- */
-#top5Container {
+/* --- Top3 라벨 박스 정돈 --- */
+#top3Container {
     display: flex;
     flex-direction: column;
     gap: 10px;
     margin-bottom: 20px;
 }
 
-.top5-item {
+.top3-item {
     padding: 8px;
     border: 1px solid #aaa;
     border-radius: 6px;
@@ -55,6 +55,7 @@ button {
     border-radius: 5px;
     cursor: pointer;
 }
+
 button:hover {
     background-color: #45a049;
 }
