@@ -60,7 +60,7 @@ def infer_features_in_dir(
         feature = np.load(os.path.join(features_dir, f))
         pred = infer_feature(model, feature)
         label_idx = np.argmax(pred)
-        label_name = le_dict.get(label_idx, "Unknown")  # dict lookup
+        label_name = le_dict['int_to_label'].get(label_idx, "unknown")
         log_message(f"Inferred {f}: {label_name} (prob={pred[label_idx]:.3f})")
         all_preds.append(pred)
         all_labels.append(label_name)
