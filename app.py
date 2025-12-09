@@ -25,10 +25,10 @@ def record_video():
     
     # 모든 프레임 추출
     frame_count = extract_frames()
-    recording_status = f"녹화 및 프레임 추출 완료 ({frame_count} 프레임)<br>랜드마크 추출 중..."
+    recording_status = f"녹화 및 프레임({frame_count} 프레임) 추출 완료. 랜드마크 추출 중..."
     
     landmark_count = extract_landmarks()
-    recording_status = f"랜드마크 추출 완료 ({landmark_count} 프레임)"
+    recording_status = f"랜드마크({landmark_count} 프레임) 추출 완료."
 
 @app.route("/")
 def index():
