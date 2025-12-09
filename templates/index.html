@@ -16,7 +16,7 @@
     <p id="status">대기 중</p>
 
     <!-- 진행 상황 로그 -->
-    <div id="statusLog" style="white-space: pre-line; border:1px solid #ccc; padding:5px; height:150px; overflow-y:auto; margin-top:10px;"></div>
+    <pre id="statusLog" style="background:#000; color:#0f0; padding:10px; height:200px; overflow-y:auto; white-space:pre-wrap;"></pre>
 
     <!-- 추출된 프레임 미리보기 -->
     <div id="framesContainer" style="display:none; margin-bottom:20px;">
@@ -36,14 +36,12 @@
     <script>
     const form = document.getElementById("recordForm");
     const statusEl = document.getElementById("status");
+    const statusLog = document.getElementById("statusLog");
     const videoContainer = document.getElementById("videoContainer");
     const videoEl = document.getElementById("recordedVideo");
     const videoSource = document.getElementById("videoSource");
     const framesContainer = document.getElementById("framesContainer");
     const framesDiv = document.getElementById("frames");
-    const statusLog = document.getElementById("statusLog");
-    let lastStatus = "";  // 이전 상태 저장
-
 
     // 녹화 버튼 클릭
     form.addEventListener("submit", async (e) => {
@@ -57,6 +55,7 @@
         // 프레임 초기화 → 버튼 클릭 시만
         framesDiv.innerHTML = "";
         framesContainer.style.display = "none";
+        statusLog.textContent = ""; // ← 로그 초기화
 
         await fetch("/start_recording", { method: "POST" });
     });
@@ -76,18 +75,17 @@
         const res = await fetch("/recording_status");
         const data = await res.json();
 
-        // 기존 status는 그대로 표시
-        statusEl.textContent = data.status;
+        // 로그 누적
+        statusLog.textContent = data.status_log.join("\n");
+        statusLog.scrollTop = statusLog.scrollHeight;
 
-        // 새 상태 메시지가 이전과 다르면 로그에 추가
-        if (data.status !== lastStatus) {
-            statusLog.textContent += data.status + "\n";
-            statusLog.scrollTop = statusLog.scrollHeight;  // 자동 스크롤
-            lastStatus = data.status;
+        // 마지막 상태를 한 줄 표시
+        if (data.status_log.length > 0) {
+            statusEl.textContent = data.status_log[data.status_log.length - 1];
         }
 
         // 영상 자동 재생
-        if (data.status.includes("녹화 및 프레임 추출 완료") && videoContainer.style.display === "none") {
+        if (data.status_log.includes("프레임 추출 완료") && videoContainer.style.display === "none") {
             const videoUrl = `/recorded_video?time=${new Date().getTime()}`;
             const exists = await waitForVideo(videoUrl);
             if (exists) {
