@@ -15,7 +15,7 @@
     <!-- 녹화 상태 표시 -->
     <p id="status">대기 중</p>
 
-    <!-- 추출된 프레임 미리보기 -->
+    <!-- 추출된 프레임 미리보기 (영상 위) -->
     <div id="framesContainer" style="display:none; margin-bottom:20px;">
         <h3>추출된 프레임</h3>
         <div id="frames" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
@@ -72,7 +72,7 @@
         statusEl.textContent = data.status;
 
         // 영상 자동 재생
-        if (data.status.includes("녹화 완료. 프레임 추출 중...") && videoContainer.style.display === "none") {
+        if (data.status.includes("녹화 및 프레임 추출 완료") && videoContainer.style.display === "none") {
             const videoUrl = `/recorded_video?time=${new Date().getTime()}`;
             const exists = await waitForVideo(videoUrl);
             if (exists) {
@@ -81,7 +81,7 @@
                 videoEl.load();
                 videoEl.play();
 
-                // 프레임 미리보기 → 영상 재생 후 표시
+                // 프레임 미리보기 → 버튼 클릭 후만 표시
                 if (data.frame_count > 0 && framesContainer.style.display === "none") {
                     framesContainer.style.display = "block";
                     const totalFrames = data.frame_count;

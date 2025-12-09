@@ -5,7 +5,6 @@ import shutil
 
 from inference.video_saver import save_video
 from inference.extract_frames import extract_frames
-# from inference.extract_landmarks import extract_landmarks
 from config import config
 
 app = Flask(__name__)
@@ -23,12 +22,7 @@ def record_video():
     # 모든 프레임 추출
     frame_count = extract_frames(output_dir=config.FRAMES_DIR)
     
-    # 프레임 추출 후 랜드마크 추출
-    # recording_status = "랜드마크 추출 중..."
-    # extract_landmarks(frame_dir=config.FRAMES_DIR, save_dir=config.LANDMARKS_DIR)
-
-    recording_status = f"녹화, 프레임 추출 및 랜드마크 완료 ({frame_count} 프레임)"
-
+    recording_status = f"녹화 및 프레임 추출 완료 ({frame_count} 프레임)"
 
 @app.route("/")
 def index():
@@ -43,11 +37,6 @@ def start_recording():
         if os.path.exists(config.FRAMES_DIR):
             shutil.rmtree(config.FRAMES_DIR)
         os.makedirs(config.FRAMES_DIR, exist_ok=True)
-
-        # 기존 landmarks 폴더 삭제 후 재생성
-        if os.path.exists(config.LANDMARKS_DIR):
-            shutil.rmtree(config.LANDMARKS_DIR)
-        os.makedirs(config.LANDMARKS_DIR, exist_ok=True)
 
         recording_thread = threading.Thread(target=record_video, daemon=True)
         recording_thread.start()
