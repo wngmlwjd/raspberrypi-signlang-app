@@ -6,41 +6,52 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>수어 번역 시스템</h1>
 
-    <form id="recordForm" method="POST" action="/start_recording">
-        <button type="submit">번역 시작</button>
-    </form>
+    <!-- 전체 좌우 50:50 배치 -->
+    <div id="layoutWrapper">
 
-    <p id="status">대기 중</p>
+        <!-- 왼쪽 영역 -->
+        <div id="leftPanel">
+            <h1>수어 번역 시스템</h1>
 
-    <div id="resultsContainer" class="hidden">
-        <h3>예측 결과</h3>
-        <ul>
-            <li>Top-1 라벨: <span id="pred_top1_label">-</span></li>
-            <li>Top-1 확률: <span id="pred_top1_prob">-</span></li>
-        </ul>
+            <div id="topRow">
+                <form id="recordForm" method="POST" action="/start_recording">
+                    <button type="submit">번역 시작</button>
+                </form>
 
-        <h3>Top-3 결과</h3>
-        <div id="top3Container"></div>
-    </div>
+                <p id="status">대기 중</p>
+            </div>
 
-    <div id="framesContainer" class="hidden">
-        <h3>추출된 프레임</h3>
-        <div id="frames" class="preview-container"></div>
-    </div>
+            <div id="resultsContainer" class="hidden">
+                <h3>예측 결과</h3>
+                <p id="predResult">예측 결과: - (-%)</p>
 
-    <div id="landmarksContainer" class="hidden">
-        <h3>랜드마크 미리보기</h3>
-        <div id="landmarks" class="preview-container"></div>
-    </div>
+                <h3>Top-3 결과</h3>
+                <div id="top3Container"></div>
+            </div>
 
-    <div id="videoContainer" class="hidden">
-        <h3>녹화된 영상</h3>
-        <video id="recordedVideo" width="960" height="720" controls>
-            <source id="videoSource" src="" type="video/mp4">
-            브라우저가 video 태그를 지원하지 않습니다.
-        </video>
+            <div id="framesContainer" class="hidden">
+                <h3>추출된 프레임</h3>
+                <div id="frames" class="preview-container"></div>
+            </div>
+
+            <div id="landmarksContainer" class="hidden">
+                <h3>랜드마크 미리보기</h3>
+                <div id="landmarks" class="preview-container"></div>
+            </div>
+        </div>
+
+        <!-- 오른쪽 영역: 녹화된 영상 -->
+        <div id="rightPanel">
+            <div id="videoContainer" class="hidden">
+                <h3>녹화된 영상</h3>
+                <video id="recordedVideo" width="960" height="720" controls>
+                    <source id="videoSource" src="" type="video/mp4">
+                    브라우저가 video 태그를 지원하지 않습니다.
+                </video>
+            </div>
+        </div>
+
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>

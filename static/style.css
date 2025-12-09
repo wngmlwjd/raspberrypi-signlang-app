@@ -7,7 +7,37 @@ body {
     display: none !important;
 }
 
-/* --- Top3 라벨 박스 정돈 --- */
+/* 좌우 패널 50:50 배치 */
+#layoutWrapper {
+    display: flex;
+    width: 100%;
+    gap: 20px;
+}
+
+#leftPanel {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#rightPanel {
+    width: 50%;
+}
+
+/* 버튼과 상태를 가로로 배치 */
+#topRow {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* 예측 결과 줄 */
+#predResult {
+    font-size: 1.1rem;
+}
+
+/* Top-3 라벨 박스 */
 #top3Container {
     display: flex;
     flex-direction: column;
@@ -37,12 +67,8 @@ body {
     box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
 }
 
-#videoContainer {
-    margin-top: 10px;
-}
-
 #recordedVideo {
-    max-width: 100%;
+    width: 100%;
     border: 1px solid #333;
 }
 

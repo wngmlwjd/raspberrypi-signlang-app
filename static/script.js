@@ -15,8 +15,7 @@ const resultsContainer = document.getElementById("resultsContainer");
 
 const top3Container = document.getElementById("top3Container");
 
-const predTop1Label = document.getElementById("pred_top1_label");
-const predTop1Prob = document.getElementById("pred_top1_prob");
+const predResult = document.getElementById("predResult");
 
 
 // ---------------------------
@@ -94,8 +93,11 @@ async function monitorStatus() {
     // ============================
     if (data.status.includes("전체 프로세스 완료") && labels) {
         resultsContainer.classList.remove("hidden");
-        predTop1Label.innerText = labels.top1_label ?? "-";
-        predTop1Prob.innerText = labels.top1_prob ?? "-";
+        
+        const label = labels.top1_label ?? "-";
+        const prob = labels.top1_prob ?? "-";
+
+        predResult.innerText = `예측 결과: ${label} (${prob}%)`;
 
         updateTop3(labels.top3_labels, labels.top3_probs);
     }
