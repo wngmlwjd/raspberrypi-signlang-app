@@ -1,14 +1,28 @@
-<!-- ui/templates/index.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>SignLang Camera</title>
+    <meta charset="UTF-8">
+    <title>RPi Camera Stream</title>
+    <style>
+        body { text-align: center; background-color: #222; color: white; font-family: Arial, sans-serif; }
+        img { margin-top: 20px; border: 3px solid #444; }
+    </style>
 </head>
 <body>
-    <h2>Camera Feed</h2>
-
-    <!-- 실시간 영상 -->
-    <img src="/video_feed" width="640" />
-
+    <h1>RPi Camera Live Stream</h1>
+    <img id="stream" src="{{ url_for('index') }}" width="640" height="480">
+    <script>
+        const img = document.getElementById("stream");
+        function updateStream() {
+            fetch("/")
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    img.src = url;
+                })
+                .finally(() => setTimeout(updateStream, 30));
+        }
+        updateStream();
+    </script>
 </body>
 </html>
