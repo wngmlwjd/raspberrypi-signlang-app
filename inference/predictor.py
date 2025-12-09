@@ -1,48 +1,32 @@
+# inference/predictor_h5.py
 import os
 import numpy as np
-import tensorflow as tf
+from tensorflow.keras.models import load_model
 
 from config.config import FEATURES_DIR, MODEL_PATH
 from utils import log_message
 
 # ----------------------------------------------------
-# 1. TFLite 모델 로드 (Flex delegate 적용)
+# 1. .h5 모델 로드
 # ----------------------------------------------------
-def load_tflite_model(model_path: str):
+def load_h5_model(model_path: str):
     if not os.path.exists(model_path):
-        raise FileNotFoundError(f"TFLite model not found: {model_path}")
-
-    # Flex delegate 적용
-    try:
-        delegate = tf.lite.experimental.load_delegate('libtensorflowlite_flex_delegate.so')
-        interpreter = tf.lite.Interpreter(model_path=model_path, experimental_delegates=[delegate])
-    except ValueError:
-        # Flex delegate가 없으면 기본 interpreter 사용
-        log_message("Flex delegate not found, using default interpreter")
-        interpreter = tf.lite.Interpreter(model_path=model_path)
-
-    interpreter.allocate_tensors()
-    log_message(f"TFLite model loaded: {model_path}")
-    return interpreter
+        raise FileNotFoundError(f"H5 model not found: {model_path}")
+    model = load_model(model_path)
+    log_message(f".h5 model loaded: {model_path}")
+    return model
 
 # ----------------------------------------------------
 # 2. 단일 feature 추론
 # ----------------------------------------------------
-def infer_feature(interpreter, feature: np.ndarray) -> np.ndarray:
+def infer_feature(model, feature: np.ndarray) -> np.ndarray:
     """
     feature : (T, J_max*3)
     return  : 모델 예측 결과
     """
-    input_details = interpreter.get_input_details()
-    output_details = interpreter.get_output_details()
-
-    # TFLite는 batch dimension 필요
-    input_data = np.expand_dims(feature, axis=0).astype(np.float32)
-
-    interpreter.set_tensor(input_details[0]['index'], input_data)
-    interpreter.invoke()
-    output_data = interpreter.get_tensor(output_details[0]['index'])
-    return output_data[0]  # batch 제거
+    input_data = np.expand_dims(feature, axis=0).astype(np.float32)  # batch dimension
+    pred = model.predict(input_data, verbose=0)
+    return pred[0]
 
 # ----------------------------------------------------
 # 3. 폴더 내 feature 전체 추론
@@ -51,7 +35,7 @@ def infer_features_in_dir(
     features_dir: str = FEATURES_DIR,
     model_path: str = MODEL_PATH
 ):
-    interpreter = load_tflite_model(model_path)
+    model = load_h5_model(model_path)
     feature_files = sorted([f for f in os.listdir(features_dir) if f.endswith(".npy")])
     if not feature_files:
         raise FileNotFoundError(f"No feature files found: {features_dir}")
@@ -59,10 +43,9 @@ def infer_features_in_dir(
     all_preds = []
     for f in feature_files:
         feature = np.load(os.path.join(features_dir, f))
-        if feature.ndim != 2:
-            raise ValueError(f"Invalid feature shape for {f}: {feature.shape}, expected (T, J_max*3)")
-        pred = infer_feature(interpreter, feature)
+        pred = infer_feature(model, feature)
         log_message(f"Inferred {f}: {pred}")
         all_preds.append(pred)
 
     return np.array(all_preds)
+

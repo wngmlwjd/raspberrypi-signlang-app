@@ -10,6 +10,7 @@ from inference.extract_landmarks import extract_landmarks
 from inference.preprocessor import generate_features_with_sliding
 from inference.predictor import infer_features_in_dir
 from config import config
+from utils import log_message
 
 app = Flask(__name__)
 
@@ -37,11 +38,9 @@ def record_video():
     feature_count = generate_features_with_sliding()
     recording_status = "랜드마크 추출 및 특징 생성 완료. 추론 중..."
     
-    feature_files = sorted([f for f in os.listdir(config.FEATURES_DIR) if f.endswith(".npy")])
-    
     predictions = infer_features_in_dir()
-    
-    recording_status = "모든 과정 완료."
+    log_message(f"모든 feature 추론 완료: {predictions.shape}")
+    recording_status = f"전체 프로세스 완료. 예측 {predictions.shape[0]}개 완료"
 
 
 @app.route("/")
