@@ -57,7 +57,7 @@ def record_video():
         "top5_per_feature": top5_per_feature
     }
 
-    recording_status = f"전체 프로세스 완료. feature {len(feature_labels)}개, 최종 라벨: {final_label}"
+    recording_status = f"전체 프로세스 완료. feature {len(feature_labels)}개"
     log_message(f"모든 feature 추론 완료: {predictions.shape}, 최종 라벨: {final_label}")
 
 # -----------------------------
