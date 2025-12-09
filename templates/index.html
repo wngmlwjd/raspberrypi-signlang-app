@@ -17,30 +17,30 @@
     <p id="status">대기 중</p>
     
     <p>마지막 예측 라벨: <span id="pred_label">-</span></p>
-    
     <h3>Feature별 Top5 라벨</h3>
-    <div id="top5Container"></div>
+    <div id="top5Container" style="display:flex; flex-direction:column; gap:5px;"></div>
 
     <!-- 랜드마크 미리보기 -->
-    <div id="landmarksContainer">
+    <div id="landmarksContainer" style="display:none; margin-bottom:10px;">
         <h3>랜드마크 미리보기</h3>
-        <div id="landmarks"></div>
+        <div id="landmarks" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
     </div>
 
-    <!-- 추출된 프레임 미리보기 -->
-    <div id="framesContainer">
+    <!-- 추출된 프레임 미리보기 (영상 위) -->
+    <div id="framesContainer" style="display:none; margin-bottom:20px;">
         <h3>추출된 프레임</h3>
-        <div id="frames"></div>
+        <div id="frames" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
     </div>
 
     <!-- 녹화 영상 재생 -->
-    <div id="videoContainer">
+    <div id="videoContainer" style="display:none; margin-top:10px;">
         <h3>녹화된 영상</h3>
-        <video id="recordedVideo" width="960" height="720" controls>
+        <video id="recordedVideo" width="960" height="720" controls> <!-- 640x480 → 960x720 -->
             <source id="videoSource" src="" type="video/mp4">
             브라우저가 video 태그를 지원하지 않습니다.
         </video>
     </div>
+
 
     <script src="script.js"></script>
 </body>
