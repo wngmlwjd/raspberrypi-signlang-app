@@ -11,6 +11,7 @@ def rpicam_vid_stream():
         "--width", "640",
         "--height", "480",
         "--framerate", "30",
+        "--liba-format", "jpeg"  # JPEG 포맷으로 출력
     ]
 
     # subprocess로 실행
