@@ -30,6 +30,8 @@ SEQUENCE_STEP = 5    # 시퀀스 생성 시 프레임 이동 간격
 
 CMD = [
     "rpicam-vid",
+    "-t", "0",
+    "-o", "test.mjpeg",
     "--width", "640",
     "--height", "480",
     "--framerate", "30",
