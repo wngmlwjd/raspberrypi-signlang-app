@@ -1,27 +1,28 @@
 from flask import Flask, Response, render_template
-import subprocess
+from camera.camera_stream import CameraStream
+from config.config import CMD
 
 app = Flask(__name__)
 
+# 카메라 스트림 시작
+camera = CameraStream(cmd=CMD)
+
 def generate():
-    """
-    rpicam-vid를 subprocess로 실행하고 stdout에서 MJPEG 프레임 읽기
-    """
-    cmd = ["rpicam-vid", "-t", "0", "-o", "-", "--width", "640", "--height", "480", "--framerate", "30", "--codec", "mjpeg"]
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=10**8) as proc:
-        while True:
-            frame = proc.stdout.read(1024)
-            if not frame:
-                break
-            yield frame
+    while True:
+        frame = camera.get_frame()
+        if frame is not None:
+            yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
 
 @app.route("/video_feed")
 def video_feed():
-    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=--frame')
+    return Response(generate(), mimetype="multipart/x-mixed-replace; boundary=frame")
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    try:
+        app.run(host="0.0.0.0", port=5000, debug=True)
+    finally:
+        camera.stop()
