@@ -2,10 +2,11 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Raspberry Pi Camera Stream</title>
+    <title>실시간 수어 번역</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Camera Stream</h1>
+    <h1>실시간 수어 번역</h1>
 
     <!-- 녹화 버튼 -->
     <form id="recordForm" method="POST" action="/start_recording">
@@ -16,141 +17,31 @@
     <p id="status">대기 중</p>
     
     <p>마지막 예측 라벨: <span id="pred_label">-</span></p>
+    
     <h3>Feature별 Top5 라벨</h3>
-    <div id="top5Container" style="display:flex; flex-direction:column; gap:5px;"></div>
+    <div id="top5Container"></div>
 
     <!-- 랜드마크 미리보기 -->
-    <div id="landmarksContainer" style="display:none; margin-bottom:10px;">
+    <div id="landmarksContainer">
         <h3>랜드마크 미리보기</h3>
-        <div id="landmarks" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
+        <div id="landmarks"></div>
     </div>
 
-    <!-- 추출된 프레임 미리보기 (영상 위) -->
-    <div id="framesContainer" style="display:none; margin-bottom:20px;">
+    <!-- 추출된 프레임 미리보기 -->
+    <div id="framesContainer">
         <h3>추출된 프레임</h3>
-        <div id="frames" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
+        <div id="frames"></div>
     </div>
 
     <!-- 녹화 영상 재생 -->
-    <div id="videoContainer" style="display:none; margin-top:10px;">
+    <div id="videoContainer">
         <h3>녹화된 영상</h3>
-        <video id="recordedVideo" width="960" height="720" controls> <!-- 640x480 → 960x720 -->
+        <video id="recordedVideo" width="960" height="720" controls>
             <source id="videoSource" src="" type="video/mp4">
             브라우저가 video 태그를 지원하지 않습니다.
         </video>
     </div>
 
-    <script>
-    const form = document.getElementById("recordForm");
-    const statusEl = document.getElementById("status");
-    const videoContainer = document.getElementById("videoContainer");
-    const videoEl = document.getElementById("recordedVideo");
-    const videoSource = document.getElementById("videoSource");
-    const framesContainer = document.getElementById("framesContainer");
-    const framesDiv = document.getElementById("frames");
-    const landmarksContainer = document.getElementById("landmarksContainer");
-    const landmarksDiv = document.getElementById("landmarks");
-    const top5Container = document.getElementById("top5Container");
-
-    function updateTop5Labels(top5_per_feature) {
-        top5Container.innerHTML = "";
-        if (!top5_per_feature) return;
-        top5_per_feature.forEach((top5, idx) => {
-            const div = document.createElement("div");
-            div.textContent = `Feature ${idx + 1}: ${top5.join(", ")}`;
-            top5Container.appendChild(div);
-        });
-    }
-
-
-    // 녹화 버튼 클릭
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        statusEl.textContent = "녹화 중...";
-
-        // 영상 초기화
-        videoSource.src = "";
-        videoContainer.style.display = "none";
-
-        // 프레임 초기화 → 버튼 클릭 시만
-        framesDiv.innerHTML = "";
-        framesContainer.style.display = "none";
-
-        // 랜드마크 초기화 → 버튼 클릭 시만
-        landmarksDiv.innerHTML = "";
-        landmarksContainer.style.display = "none";
-
-        await fetch("/start_recording", { method: "POST" });
-    });
-
-    // 영상 준비 확인 함수
-    const waitForVideo = async (url, retries = 10, delay = 500) => {
-        for (let i = 0; i < retries; i++) {
-            const res = await fetch(url, { method: "HEAD" });
-            if (res.ok) return true;
-            await new Promise(r => setTimeout(r, delay));
-        }
-        return false;
-    };
-
-    // 녹화 상태 모니터링
-    setInterval(async () => {
-        const res = await fetch("/recording_status");
-        const data = await res.json();
-        statusEl.textContent = data.status;
-
-        // 영상 자동 재생
-        if (data.status.includes("프레임 추출 완료") && videoContainer.style.display === "none") {
-            const videoUrl = `/recorded_video?time=${new Date().getTime()}`;
-            const exists = await waitForVideo(videoUrl);
-            if (exists) {
-                videoSource.src = videoUrl;
-                videoContainer.style.display = "block";
-                videoEl.load();
-                videoEl.play();
-            }
-        }
-
-        // 프레임 미리보기 → 버튼 클릭 후만 표시
-        if (videoContainer.style.display === "block" && data.frame_count > 0 && framesContainer.style.display === "none") {
-            framesContainer.style.display = "block";
-            const totalFrames = data.frame_count;
-            const displayCount = 5;
-            const step = Math.floor(totalFrames / displayCount) || 1;
-
-            for (let i = 0; i < totalFrames && i < displayCount * step; i += step) {
-                const img = document.createElement("img");
-                img.src = `/frames/frame_${i.toString().padStart(5,'0')}.jpg?time=${new Date().getTime()}`;
-                img.width = 180;  // 120 → 180
-                framesDiv.appendChild(img);
-            }
-        }
-
-        // 랜드마크 미리보기
-        if (data.status.includes("랜드마크 추출 및 특징 생성 완료") && landmarksContainer.style.display === "none") {
-            landmarksContainer.style.display = "block";
-            const totalLandmarks = data.landmark_count;
-            const displayCount = 5;
-            const step = Math.floor(totalLandmarks / displayCount) || 1;
-
-            for (let i = 0; i < totalLandmarks && i < displayCount * step; i += step) {
-                const img = document.createElement("img");
-                img.src = `/draw_landmarks/landmark_${i.toString().padStart(5,'0')}.jpg?time=${new Date().getTime()}`;
-                img.width = 180;  // 120 → 180
-                landmarksDiv.appendChild(img);
-            }
-        }
-    }, 1000);
-
-    async function updateStatus() {
-        const res = await fetch("/recording_status");
-        const data = await res.json();
-        document.getElementById("status").innerText = data.status;
-        document.getElementById("pred_label").innerText = data.predicted_labels?.final_label || "-";
-        updateTop5Labels(data.predicted_labels?.top5_per_feature);
-    }
-
-    setInterval(updateStatus, 1000);
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
