@@ -18,7 +18,7 @@ def rpicam_realtime_loop(interval=5):
     """
     interval: 영상 단위 녹화 시간 (초)
     """
-    infer = AppInferenceTFLite()
+    # infer = AppInferenceTFLite()
     file_index = 0
 
     while True:
@@ -63,11 +63,11 @@ def rpicam_realtime_loop(interval=5):
             # -------------------------------
             # 버퍼가 채워지면 Inference
             # -------------------------------
-            if len(buffer) == SEQUENCE_LENGTH:
-                seq_array = np.array(buffer)
-                pred_word, pred_prob = infer.predict_from_array(seq_array)
-                print(f"👉 Result: {pred_word}  |  confidence={pred_prob.max():.4f}")
-                print("-------------------------------------------")
+            # if len(buffer) == SEQUENCE_LENGTH:
+            #     seq_array = np.array(buffer)
+            #     pred_word, pred_prob = infer.predict_from_array(seq_array)
+            #     print(f"👉 Result: {pred_word}  |  confidence={pred_prob.max():.4f}")
+            #     print("-------------------------------------------")
 
         # -------------------------------
         # 4) 프레임 폴더 초기화 (선택 사항)
