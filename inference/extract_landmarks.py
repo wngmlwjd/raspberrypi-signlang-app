@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-from config.config import FRAMES_DIR, LANDMARKS_DIR
+from config.config import FRAMES_DIR, LANDMARKS_DIR, DRAW_LANDMARKS_DIR
 from inference.hand_tracking import HandTracker
 
 
@@ -25,6 +25,7 @@ def extract_landmarks(frame_dir: str = FRAMES_DIR, save_dir: str = LANDMARKS_DIR
 
         # 기존 이미지 파일 처리
         landmarks = tracker.process_image(frame_path)
+        tracker.draw_and_save_landmarks(frame_dir, DRAW_LANDMARKS_DIR, landmarks)
 
         save_path = os.path.join(
             save_dir,

@@ -6,6 +6,7 @@ DATASET_DIR = os.path.join(BASE_DIR, "dataset")
 RAW_DIR = os.path.join(DATASET_DIR, "raw")
 FRAMES_DIR = os.path.join(DATASET_DIR, "frames")
 LANDMARKS_DIR = os.path.join(DATASET_DIR, "landmarks")
+DRAW_LANDMARKS_DIR = os.path.join(DATASET_DIR, "draw_landmarks")
 FEATURES_DIR = os.path.join(DATASET_DIR, "features")
 
 MODEL_DIR = os.path.join(BASE_DIR, "model")

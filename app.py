@@ -43,6 +43,14 @@ def start_recording():
         if os.path.exists(config.FRAMES_DIR):
             shutil.rmtree(config.FRAMES_DIR)
         os.makedirs(config.FRAMES_DIR, exist_ok=True)
+        # 기존 landmarks 폴더 삭제 후 재생성
+        if os.path.exists(config.LANDMARKS_DIR):
+            shutil.rmtree(config.LANDMARKS_DIR)
+        os.makedirs(config.LANDMARKS_DIR, exist_ok=True)
+        # 기존 draw_landmarks 폴더 삭제 후 재생성
+        if os.path.exists(config.DRAW_LANDMARKS_DIR):
+            shutil.rmtree(config.DRAW_LANDMARKS_DIR)
+        os.makedirs(config.DRAW_LANDMARKS_DIR, exist_ok=True)
 
         recording_thread = threading.Thread(target=record_video, daemon=True)
         recording_thread.start()
@@ -52,7 +60,7 @@ def start_recording():
 
 @app.route("/recording_status")
 def get_status():
-    return jsonify({"status": recording_status, "frame_count": frame_count})
+    return jsonify({"status": recording_status, "frame_count": frame_count, "landmark_count": landmark_count})
 
 @app.route("/recorded_video")
 def recorded_video():
@@ -66,6 +74,13 @@ def serve_frame(filename):
     if os.path.exists(path):
         return send_file(path, mimetype="image/jpeg")
     return "프레임이 없습니다.", 404
+
+@app.route("/draw_landmarks/<filename>")
+def serve_draw_landmark(filename):
+    path = os.path.join(config.DRAW_LANDMARKS_DIR, filename)
+    if os.path.exists(path):
+        return send_file(path, mimetype="image/jpeg")
+    return "랜드마크 이미지가 없습니다.", 404
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
