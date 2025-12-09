@@ -3,17 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <title>Raspberry Pi Camera Stream</title>
-    <script>
-        function startRecording() {
-            fetch('/start_recording', { method: 'POST' })
-                .then(response => response.text())
-                .then(data => alert(data))
-                .catch(err => console.error(err));
-        }
-    </script>
 </head>
 <body>
     <h1>Camera Stream</h1>
-    <button onclick="startRecording()">녹화 시작</button>
+    <img src="{{ url_for('video_feed') }}" width="640" height="480">
+    
+    <div style="margin-top:20px;">
+        <button id="recordBtn">녹화 시작</button>
+        <span id="status"></span>
+    </div>
+
+    <script>
+        const button = document.getElementById('recordBtn');
+        const status = document.getElementById('status');
+
+        button.addEventListener('click', () => {
+            status.textContent = "녹화 중...";
+            fetch("/start_recording", { method: "POST" })
+                .then(response => response.text())
+                .then(data => {
+                    status.textContent = data;  // 서버에서 반환한 메시지로 상태 업데이트
+                })
+                .catch(err => {
+                    status.textContent = "녹화 시작 실패";
+                    console.error(err);
+                });
+        });
+    </script>
 </body>
 </html>
