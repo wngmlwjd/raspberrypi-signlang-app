@@ -1,0 +1,55 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+/* HTML 파일에 인라인으로 있던 스타일을 CSS로 분리 및 개선 */
+#top5Container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 20px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+/* 랜드마크 및 프레임 이미지 스타일 */
+.preview-container img {
+    width: 180px;
+    height: auto; /* 비율 유지 */
+    border: 1px solid #ddd;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#videoContainer {
+    margin-top: 10px;
+}
+
+/* 비디오 요소 스타일 */
+#recordedVideo {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #333;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
