@@ -2,11 +2,13 @@ from flask import Flask, render_template, jsonify, send_file
 import threading
 import os
 import shutil
+import numpy as np
 
 from inference.video_saver import save_video
 from inference.extract_frames import extract_frames
 from inference.extract_landmarks import extract_landmarks
 from inference.preprocessor import generate_features_with_sliding
+from inference.predictor import load_tflite_model, infer_feature
 from config import config
 
 app = Flask(__name__)
@@ -16,6 +18,7 @@ recording_status = "대기 중"
 frame_count = 0
 landmark_count = 0
 feature_count = 0
+predictions = None
 
 def record_video():
     global recording_status, frame_count, landmark_count, feature_count
@@ -27,12 +30,25 @@ def record_video():
     
     # 모든 프레임 추출
     frame_count = extract_frames()
-    recording_status = f"녹화 및 프레임 추출 완료. 랜드마크 추출 중..."
+    recording_status = "녹화 및 프레임 추출 완료. 랜드마크 추출 중..."
     
     landmark_count = extract_landmarks()
     
     feature_count = generate_features_with_sliding()
-    recording_status = f"랜드마크 추출 및 특징 생성 완료."
+    recording_status = "랜드마크 추출 및 특징 생성 완료. 추론 중..."
+    
+    interpreter = load_tflite_model(config.MODEL_PATH)
+    feature_files = sorted([f for f in os.listdir(config.FEATURES_DIR) if f.endswith(".npy")])
+    
+    predictions = []
+    for f in feature_files:
+        feature = np.load(os.path.join(config.FEATURES_DIR, f))
+        pred = infer_feature(interpreter, feature)
+        predictions.append(pred)
+    
+    predictions = np.array(predictions)
+    recording_status = "모든 과정 완료."
+
 
 @app.route("/")
 def index():
@@ -68,7 +84,7 @@ def start_recording():
 
 @app.route("/recording_status")
 def get_status():
-    return jsonify({"status": recording_status, "frame_count": frame_count, "landmark_count": landmark_count, "feature_count": feature_count})
+    return jsonify({"status": recording_status, "frame_count": frame_count, "landmark_count": landmark_count, "feature_count": feature_count, "predictions_shape": None if predictions is None else predictions.shape})
 
 @app.route("/recorded_video")
 def recorded_video():

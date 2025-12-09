@@ -1,63 +1,65 @@
 import os
 import numpy as np
+import tensorflow as tf
 
-from inference.TFLite import AppInferenceTFLite
-from config.config import MODEL_PATH, FEATURES_DIR
+from config.config import FEATURES_DIR, MODEL_PATH
+from utils import log_message
 
+# ----------------------------------------------------
+# 1. TFLite 모델 로드
+# ----------------------------------------------------
+def load_tflite_model(model_path: str):
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"TFLite model not found: {model_path}")
 
-def main():
-    print("📌 Using config settings:")
-    print(f"  - MODEL_PATH: {MODEL_PATH}")
-    print(f"  - INPUT_FEATURE_DIR: {FEATURES_DIR}")
+    interpreter = tf.lite.Interpreter(model_path=model_path)
+    interpreter.allocate_tensors()
+    log_message(f"TFLite model loaded: {model_path}")
+    return interpreter
 
-    # -----------------------------
-    # 1) 모델, 인코더, maxJ 로드
-    # -----------------------------
-    print("\n📌 Loading model & encoder...")
-    infer = AppInferenceTFLite()   # ← date 제거
+# ----------------------------------------------------
+# 2. 단일 feature 추론
+# ----------------------------------------------------
+def infer_feature(interpreter, feature: np.ndarray) -> np.ndarray:
+    """
+    feature : (T, J_max*3)
+    return  : 모델 예측 결과
+    """
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
 
-    # -----------------------------
-    # 2) FEATURES_DIR 내부 .npy 파일 수집
-    # -----------------------------
-    if not os.path.isdir(FEATURES_DIR):
-        raise NotADirectoryError(f"입력 경로가 유효한 폴더가 아닙니다: {FEATURES_DIR}")
+    # TFLite는 batch dimension 필요
+    input_data = np.expand_dims(feature, axis=0).astype(np.float32)
 
-    npy_files = sorted([
-        os.path.join(FEATURES_DIR, f)
-        for f in os.listdir(FEATURES_DIR)
-        if f.endswith(".npy")
-    ])
+    interpreter.set_tensor(input_details[0]['index'], input_data)
+    interpreter.invoke()
+    output_data = interpreter.get_tensor(output_details[0]['index'])
+    return output_data[0]  # batch 제거
 
-    if len(npy_files) == 0:
-        raise FileNotFoundError(f"폴더 내 .npy 파일이 없습니다: {FEATURES_DIR}")
+# ----------------------------------------------------
+# 3. 폴더 내 feature 전체 추론
+# ----------------------------------------------------
+def infer_features_in_dir(
+    features_dir: str = FEATURES_DIR,
+    model_path: str = MODEL_PATH
+):
+    interpreter = load_tflite_model(model_path)
+    feature_files = sorted([f for f in os.listdir(features_dir) if f.endswith(".npy")])
+    if not feature_files:
+        raise FileNotFoundError(f"No feature files found: {features_dir}")
 
-    print(f"\n📁 Found {len(npy_files)} npy files.")
-    print("-----------------------------")
-    for i, f in enumerate(npy_files, 1):
-        print(f"[{i}] {os.path.basename(f)}")
-    print("-----------------------------\n")
+    all_preds = []
+    for f in feature_files:
+        feature = np.load(os.path.join(features_dir, f))
+        pred = infer_feature(interpreter, feature)
+        log_message(f"Inferred {f}: {pred}")
+        all_preds.append(pred)
 
-    # -----------------------------
-    # 3) 파일별 추론 실행
-    # -----------------------------
-    for idx, npy_path in enumerate(npy_files, 1):
-        print(f"📌 Loading: {npy_path}")
-        features = np.load(npy_path)
+    return np.array(all_preds)
 
-        print("📌 Running inference...")
-        pred_word, pred_prob = infer.predict_from_array(features)
-
-        # -----------------------------
-        # 4) 결과 출력
-        # -----------------------------
-        print("\n======================")
-        print(f"🟢 Prediction Result ({idx}/{len(npy_files)})")
-        print("======================")
-        print(f"File            : {os.path.basename(npy_path)}")
-        print(f"Predicted Label : {pred_word}")
-        print(f"Confidence      : {pred_prob.max():.4f}")
-        print("======================\n")
-
-
+# ----------------------------------------------------
+# 4. 실행 예제
+# ----------------------------------------------------
 if __name__ == "__main__":
-    main()
+    predictions = infer_features_in_dir()
+    print("All predictions shape:", predictions.shape)
