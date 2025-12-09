@@ -92,7 +92,7 @@ async function monitorStatus() {
     // ============================
     // top1 + top3 업데이트
     // ============================
-    if (labels) {
+    if (data.status.includes("전체 프로세스 완료") && labels) {
         resultsContainer.classList.remove("hidden");
         predTop1Label.innerText = labels.top1_label ?? "-";
         predTop1Prob.innerText = labels.top1_prob ?? "-";
