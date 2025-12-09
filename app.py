@@ -7,9 +7,19 @@ def generate():
     """
     rpicam-vid를 subprocess로 실행하고 stdout에서 MJPEG 프레임 읽기
     """
-    cmd = ["rpicam-vid", "-t", "0", "-o", "-", "--width", "640", "--height", "480", "--framerate", "30", "--codec", "mjpeg"]
+    cmd = [
+        "rpicam-vid",
+        "--nopreview",          # 화면 창 띄우지 않음
+        "-t", "0",              # 무한 녹화
+        "-o", "-",              # stdout으로 출력
+        "--width", "640",
+        "--height", "480",
+        "--framerate", "30",
+        "--codec", "mjpeg"      # MJPEG 스트림
+    ]
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=10**8) as proc:
         while True:
+            # MJPEG는 프레임 단위로 boundary가 붙어야 함
             frame = proc.stdout.read(1024)
             if not frame:
                 break
