@@ -53,8 +53,7 @@ def index():
                     continue
 
                 frame_bytes = buffer_jpg.tobytes()
-                yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+                yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
             except Exception as e:
                 print("⚠️ Frame processing failed:", e)
