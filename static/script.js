@@ -12,8 +12,10 @@ const landmarksContainer = document.getElementById("landmarksContainer");
 const landmarksDiv = document.getElementById("landmarks");
 
 const resultsContainer = document.getElementById("resultsContainer");
+const resultsTitle = document.getElementById("predTitle")
 
 const top3Container = document.getElementById("top3Container");
+
 
 
 // ---------------------------
@@ -46,8 +48,8 @@ form.addEventListener("submit", async (e) => {
     videoContainer.classList.add("hidden");
 
     // 예측 초기화
-    predResult.innerText = "예측 결과: - (-%)";
     top3Container.innerHTML = "";
+    resultsTitle.innerText = "에측 결과"
     resultsContainer.classList.add("hidden");
 
     await fetch("/start_recording", { method: "POST" });
@@ -86,7 +88,7 @@ async function monitorStatus() {
         const label = labels.top1_label ?? "-";
         const prob = labels.top1_prob ?? "-";
 
-        document.getElementById("predTitle").innerText = `예측 결과: ${top1_label} (${(top1_prob * 100).toFixed(1)}%)`;
+        resultsTitle.innerText = `예측 결과: ${top1_label} (${(top1_prob * 100).toFixed(1)}%)`;
 
         updateTop3(labels.top3_labels, labels.top3_probs);
     }
