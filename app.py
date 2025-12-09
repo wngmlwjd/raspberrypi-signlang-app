@@ -27,30 +27,18 @@ def start_camera():
     subprocess.Popen(cmd)
 
 def generate():
-    cmd = [
-        "rpicam-vid",
-        "-t", "0",
-        "-o", "-",
-        "--width", "640",
-        "--height", "480",
-        "--framerate", "30",
-        "--codec", "mjpeg",
-        "--nopreview"
-    ]
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=10**8) as proc:
-        data = b""
-        while True:
-            chunk = proc.stdout.read(1024)
-            if not chunk:
-                break
-            data += chunk
-            # JPEG 프레임 시작/끝 인식
-            while b"\xff\xd8" in data and b"\xff\xd9" in data:
-                start = data.find(b"\xff\xd8")
-                end = data.find(b"\xff\xd9") + 2
-                frame = data[start:end]
-                data = data[end:]
-                yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
+    """
+    MJPEG 파일을 읽어 브라우저에 스트리밍
+    """
+    while True:
+        if not os.path.exists(CAM_FILE):
+            time.sleep(0.1)
+            continue
+        
+        with open(CAM_FILE, "rb") as f:
+            chunk = f.read()
+            if chunk:
+                yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + chunk + b"\r\n"
 
 @app.route("/video_feed")
 def video_feed():
