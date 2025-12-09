@@ -19,6 +19,7 @@ def extract_landmarks(frame_dir: str = FRAMES_DIR, save_dir: str = LANDMARKS_DIR
 
     print(f"📸 총 {len(frame_files)}개의 프레임을 처리합니다...")
 
+    landmark_count = 0
     for frame_file in frame_files:
         frame_path = os.path.join(frame_dir, frame_file)
 
@@ -30,6 +31,9 @@ def extract_landmarks(frame_dir: str = FRAMES_DIR, save_dir: str = LANDMARKS_DIR
             os.path.splitext(frame_file)[0] + ".npy"
         )
         tracker.save_landmarks(landmarks, save_path)
+        
+        landmark_count += 1
 
     tracker.close()
     print(f"✅ 랜드마크 저장 완료 → {save_dir}")
+    return landmark_count

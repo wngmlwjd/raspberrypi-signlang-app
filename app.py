@@ -5,6 +5,7 @@ import shutil
 
 from inference.video_saver import save_video
 from inference.extract_frames import extract_frames
+from inference.extract_landmarks import extract_landmarks
 from config import config
 
 app = Flask(__name__)
@@ -12,17 +13,22 @@ app = Flask(__name__)
 recording_thread = None
 recording_status = "대기 중"
 frame_count = 0
+landmark_count = 0
 
 def record_video():
-    global recording_status, frame_count
+    global recording_status, frame_count, landmark_count
+    
     recording_status = "녹화 중..."
+    
     save_video()  # 녹화 실행
     recording_status = "녹화 완료. 프레임 추출 중..."
     
     # 모든 프레임 추출
-    frame_count = extract_frames(output_dir=config.FRAMES_DIR)
-    
+    frame_count = extract_frames()
     recording_status = f"녹화 및 프레임 추출 완료 ({frame_count} 프레임)"
+    
+    landmark_count = extract_landmarks()
+    recording_status = f"랜드마크 추출 완료 ({landmark_count} 프레임)"
 
 @app.route("/")
 def index():
