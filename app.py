@@ -1,6 +1,6 @@
 # app.py
 from flask import Flask, Response
-from camera_stream import CameraStream
+from camera.camera_stream import CameraStream
 from config.config import CMD  # rpicam-vid 명령어
 
 app = Flask(__name__)
