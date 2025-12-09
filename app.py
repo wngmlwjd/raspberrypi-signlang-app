@@ -42,11 +42,11 @@ def record_video():
     
     # 3) 랜드마크 추출
     landmark_count = extract_landmarks()
-    recording_status = "랜드마크 추출 완료. 특징 생성 중..."
+    # recording_status = "랜드마크 추출 완료. 특징 생성 중..."
     
     # 4) feature 생성
     feature_count = generate_features_with_sliding()
-    recording_status = "특징 생성 완료. 추론 중..."
+    recording_status = "랜드마크 추출 및 특징 생성 완료. 추론 중..."
     
     # 5) feature별 예측 + top5 합산 최종 라벨
     predictions, feature_labels, final_label = infer_features_in_dir(top5_aggregate=True)
