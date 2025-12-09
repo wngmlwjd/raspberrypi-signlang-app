@@ -15,8 +15,6 @@ const resultsContainer = document.getElementById("resultsContainer");
 
 const top3Container = document.getElementById("top3Container");
 
-const predResult = document.getElementById("predResult");
-
 
 // ---------------------------
 // Top-3 업데이트
