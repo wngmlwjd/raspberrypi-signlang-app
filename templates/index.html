@@ -6,29 +6,36 @@
 </head>
 <body>
     <h1>Camera Stream</h1>
-    {% comment %} <img src="{{ url_for('video_feed') }}" width="640" height="480"> {% endcomment %}
-    
-    <div style="margin-top:20px;">
-        <button id="recordBtn">녹화 시작</button>
-        <span id="status"></span>
-    </div>
+    {# 카메라 화면은 주석 처리 #}
+    {# <img src="{{ url_for('video_feed') }}" width="640" height="480"> #}
+
+    <!-- 녹화 버튼 -->
+    <form id="recordForm" method="POST" action="/start_recording">
+        <button type="submit">번역 시작</button>
+    </form>
+
+    <!-- 녹화 상태 표시 -->
+    <p id="status">대기 중</p>
 
     <script>
-        const button = document.getElementById('recordBtn');
-        const status = document.getElementById('status');
+        const form = document.getElementById("recordForm");
+        const statusEl = document.getElementById("status");
 
-        button.addEventListener('click', () => {
-            status.textContent = "녹화 중...";
-            fetch("/start_recording", { method: "POST" })
-                .then(response => response.text())
-                .then(data => {
-                    status.textContent = data;  // 서버에서 반환한 메시지로 상태 업데이트
-                })
-                .catch(err => {
-                    status.textContent = "녹화 시작 실패";
-                    console.error(err);
-                });
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            statusEl.textContent = "녹화 중...";
+
+            const res = await fetch("/start_recording", { method: "POST" });
+            const data = await res.json();
+            statusEl.textContent = data.status;
         });
+
+        // 녹화 상태 폴링 (선택 사항)
+        setInterval(async () => {
+            const res = await fetch("/recording_status");
+            const data = await res.json();
+            statusEl.textContent = data.status;
+        }, 1000);
     </script>
 </body>
 </html>
