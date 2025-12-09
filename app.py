@@ -1,29 +1,38 @@
 from flask import Flask, Response, render_template
 import subprocess
+import time
 
 app = Flask(__name__)
 
-def generate():
-    """
-    rpicam-vid를 subprocess로 실행하고 stdout에서 MJPEG 프레임 읽기
-    """
+# rpicam-vid를 MJPEG 파일로 출력
+CAM_FILE = "/dev/shm/cam.mjpeg"
+
+def start_camera():
     cmd = [
         "rpicam-vid",
-        "--nopreview",          # 화면 창 띄우지 않음
-        "-t", "0",              # 무한 녹화
-        "-o", "-",              # stdout으로 출력
+        "--nopreview",
+        "-t", "0",
+        "-o", CAM_FILE,
         "--width", "640",
         "--height", "480",
         "--framerate", "30",
-        "--codec", "mjpeg"      # MJPEG 스트림
+        "--codec", "mjpeg"
     ]
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=10**8) as proc:
-        while True:
-            # MJPEG는 프레임 단위로 boundary가 붙어야 함
-            frame = proc.stdout.read(1024)
-            if not frame:
-                break
-            yield frame
+    # 백그라운드로 실행
+    subprocess.Popen(cmd)
+
+def generate():
+    """MJPEG 파일을 읽어 프레임 단위로 전송"""
+    while True:
+        try:
+            with open(CAM_FILE, "rb") as f:
+                while True:
+                    chunk = f.read(1024)
+                    if not chunk:
+                        break
+                    yield chunk
+        except FileNotFoundError:
+            time.sleep(0.1)
 
 @app.route("/video_feed")
 def video_feed():
@@ -34,4 +43,5 @@ def index():
     return render_template("index.html")
 
 if __name__ == "__main__":
+    start_camera()
     app.run(host="0.0.0.0", port=5000, debug=True)
