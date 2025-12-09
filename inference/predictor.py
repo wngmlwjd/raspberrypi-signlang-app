@@ -40,6 +40,29 @@ def infer_feature(model, feature: np.ndarray) -> np.ndarray:
     return pred[0]
 
 # ----------------------------------------------------
+# 4-1. 최근 N개 feature 가중 평균 기반 최종 라벨 결정
+# ----------------------------------------------------
+def predict_weighted_average_recent(all_preds, le_dict, recent_n=5, smoothing=0.01):
+    """
+    all_preds : (num_features, num_classes) - 각 feature별 softmax
+    recent_n  : 최근 N개 feature만 반영
+    smoothing : 확률 안정화용 최소값
+    return    : 최종 예측 라벨, 최종 확률
+    """
+    # 최근 N개 feature 선택
+    recent_preds = all_preds[-recent_n:]
+    
+    # smoothing 적용 후 평균
+    avg_probs = np.clip(np.mean(recent_preds, axis=0), smoothing, 1.0)
+    avg_probs /= avg_probs.sum()  # 정규화
+
+    final_idx = np.argmax(avg_probs)
+    final_label = le_dict['int_to_label'].get(final_idx, "unknown")
+    final_prob = float(avg_probs[final_idx])
+
+    return final_label, final_prob
+
+# ----------------------------------------------------
 # 4-2. 격노 확률 임계치 기반 최종 라벨 결정
 # ----------------------------------------------------
 def predict_ignore_kyukno(all_preds, le_dict, kyukno_label="격노", threshold=0.95, recent_n=5, smoothing=0.01):
@@ -72,6 +95,48 @@ def predict_ignore_kyukno(all_preds, le_dict, kyukno_label="격노", threshold=0
     final_prob = float(avg_probs[final_idx])
 
     return final_label, final_prob
+
+# ----------------------------------------------------
+# 4-3. 전체 평균 압도적 격노 + 최근 N개 기반 격노 제외
+# ----------------------------------------------------
+def predict_kyukno_with_overall(all_preds, le_dict, kyukno_label="격노",
+                                overall_threshold=0.95, recent_n=5, smoothing=0.01):
+    """
+    all_preds          : (num_features, num_classes)
+    kyukno_label       : '격노' 라벨 이름
+    overall_threshold  : 전체 평균에서 격노 확률이 이 값 이상이면 격노 유지
+    recent_n           : 최근 N개 feature만 반영
+    smoothing          : 확률 안정화용 최소값
+    return             : 최종 예측 라벨, 최종 확률
+    """
+    # 전체 평균
+    avg_probs_all = np.clip(np.mean(all_preds, axis=0), smoothing, 1.0)
+    avg_probs_all /= avg_probs_all.sum()
+
+    # 격노 index
+    kyukno_idx = None
+    for k, v in le_dict['int_to_label'].items():
+        if v == kyukno_label:
+            kyukno_idx = k
+            break
+
+    # 전체 평균에서 압도적 격노면 바로 반환
+    if kyukno_idx is not None and avg_probs_all[kyukno_idx] >= overall_threshold:
+        return kyukno_label, float(avg_probs_all[kyukno_idx])
+
+    # 최근 N개 평균, 격노 제외
+    recent_preds = all_preds[-recent_n:]
+    avg_probs_recent = np.clip(np.mean(recent_preds, axis=0), smoothing, 1.0)
+    if kyukno_idx is not None:
+        avg_probs_recent[kyukno_idx] = 0
+    avg_probs_recent /= avg_probs_recent.sum()
+
+    final_idx = np.argmax(avg_probs_recent)
+    final_label = le_dict['int_to_label'].get(final_idx, "unknown")
+    final_prob = float(avg_probs_recent[final_idx])
+
+    return final_label, final_prob
+
 
 # ----------------------------------------------------
 # 5. 폴더 내 feature 전체 추론 + Top5 확률 개선 + 격노 제외
@@ -117,11 +182,11 @@ def infer_features_in_dir_realistic_kyukno(
     all_preds = np.array(all_preds)
 
     if use_weighted_average:
-        final_label, final_prob = predict_ignore_kyukno(
+        final_label, final_prob = predict_kyukno_with_overall(
             all_preds,
             le_dict,
             kyukno_label=kyukno_label,
-            threshold=kyukno_threshold,
+            overall_threshold=kyukno_threshold,
             recent_n=recent_n
         )
     else:
