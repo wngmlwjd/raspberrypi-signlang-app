@@ -39,6 +39,8 @@
         const framesContainer = document.getElementById("framesContainer");
         const framesDiv = document.getElementById("frames");
 
+        let frameCountCache = 0;  // 화면에 표시된 프레임 수
+
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
             statusEl.textContent = "녹화 중...";
@@ -50,14 +52,10 @@
             // 2. 기존 프레임 초기화
             framesDiv.innerHTML = "";
             framesContainer.style.display = "none";
-
-            // 3. 이전 frame_count도 초기화
-            frameCountCache = 0;  // 새로운 변수로 현재 화면에 표시된 프레임 개수 관리
+            frameCountCache = 0;
 
             await fetch("/start_recording", { method: "POST" });
         });
-
-        let frameCountCache = 0;
 
         setInterval(async () => {
             const res = await fetch("/recording_status");
@@ -66,8 +64,8 @@
 
             // 영상 자동 재생 및 제목 표시
             if (data.status.includes("녹화 및 프레임 추출 완료") && videoContainer.style.display === "none") {
-                const videoUrl = `/recorded_video?time=${new Date().getTime()}`;
-                videoSource.src = videoUrl;
+                const timestamp = new Date().getTime();
+                videoSource.src = `/recorded_video?time=${timestamp}`;
                 videoContainer.style.display = "block";
                 videoEl.load();
                 videoEl.play();
@@ -82,10 +80,12 @@
 
                 for (let i = 0; i < totalFrames && i < displayCount * step; i += step) {
                     const img = document.createElement("img");
-                    img.src = `/frames/frame_${i.toString().padStart(5,'0')}.jpg?time=${new Date().getTime()}`;
+                    const timestamp = new Date().getTime();
+                    img.src = `/frames/frame_${i.toString().padStart(5,'0')}.jpg?time=${timestamp}`;
                     img.width = 120;
                     framesDiv.appendChild(img);
                 }
+
                 frameCountCache = data.frame_count;
             }
         }, 1000);
