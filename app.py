@@ -32,6 +32,12 @@ def index():
 def start_recording():
     global recording_thread
     if recording_thread is None or not recording_thread.is_alive():
+
+        # 기존 frames 폴더 삭제 후 재생성
+        if os.path.exists(config.FRAMES_DIR):
+            shutil.rmtree(config.FRAMES_DIR)
+        os.makedirs(config.FRAMES_DIR, exist_ok=True)
+
         recording_thread = threading.Thread(target=record_video, daemon=True)
         recording_thread.start()
         return jsonify({"status": "녹화를 시작했습니다!"})
