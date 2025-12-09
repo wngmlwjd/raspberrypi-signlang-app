@@ -15,8 +15,8 @@ def index():
 def start_recording():
     global recording_thread
     if recording_thread is None or not recording_thread.is_alive():
-        # 버튼 클릭 시 새로운 스레드에서 save_video() 실행
-        recording_thread = threading.Thread(target=video_saver.save_video, args=(0,), daemon=True)
+        # args 없이 save_video() 실행
+        recording_thread = threading.Thread(target=video_saver.save_video, daemon=True)
         recording_thread.start()
         return "녹화를 시작했습니다!"
     else:
