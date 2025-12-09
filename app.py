@@ -5,7 +5,7 @@ import shutil
 
 from inference.video_saver import save_video
 from inference.extract_frames import extract_frames
-from inference.extract_landmarks import extract_landmarks
+# from inference.extract_landmarks import extract_landmarks
 from config import config
 
 app = Flask(__name__)

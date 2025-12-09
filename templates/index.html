@@ -39,8 +39,6 @@
     const framesContainer = document.getElementById("framesContainer");
     const framesDiv = document.getElementById("frames");
 
-    let videoDisplayed = false;  // ← 영상 재생 여부 체크용
-
     // 녹화 버튼 클릭
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -49,7 +47,6 @@
         // 영상 초기화
         videoSource.src = "";
         videoContainer.style.display = "none";
-        videoDisplayed = false; // ← 초기화
 
         // 프레임 초기화 → 버튼 클릭 시만
         framesDiv.innerHTML = "";
@@ -74,8 +71,8 @@
         const data = await res.json();
         statusEl.textContent = data.status;
 
-        // 영상 자동 재생 (문구 대신 bool 변수 사용)
-        if (!videoDisplayed && data.frame_count > 0) {
+        // 영상 자동 재생
+        if (data.status.includes("녹화 및 프레임 추출 완료") && videoContainer.style.display === "none") {
             const videoUrl = `/recorded_video?time=${new Date().getTime()}`;
             const exists = await waitForVideo(videoUrl);
             if (exists) {
@@ -83,10 +80,9 @@
                 videoContainer.style.display = "block";
                 videoEl.load();
                 videoEl.play();
-                videoDisplayed = true;  // ← 재생 완료 처리
 
                 // 프레임 미리보기 → 영상 재생 후 표시
-                if (framesContainer.style.display === "none") {
+                if (data.frame_count > 0 && framesContainer.style.display === "none") {
                     framesContainer.style.display = "block";
                     const totalFrames = data.frame_count;
                     const displayCount = 5;
