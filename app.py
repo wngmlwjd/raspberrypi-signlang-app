@@ -24,8 +24,8 @@ def record_video():
     frame_count = extract_frames(output_dir=config.FRAMES_DIR)
     
     # 프레임 추출 후 랜드마크 추출
-    recording_status = "랜드마크 추출 중..."
-    extract_landmarks(frame_dir=config.FRAMES_DIR, save_dir=config.LANDMARKS_DIR)
+    # recording_status = "랜드마크 추출 중..."
+    # extract_landmarks(frame_dir=config.FRAMES_DIR, save_dir=config.LANDMARKS_DIR)
 
     recording_status = f"녹화, 프레임 추출 및 랜드마크 완료 ({frame_count} 프레임)"
 
