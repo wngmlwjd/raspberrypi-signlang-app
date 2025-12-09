@@ -15,6 +15,9 @@
     <!-- 녹화 상태 표시 -->
     <p id="status">대기 중</p>
 
+    <!-- 진행 상황 로그 -->
+    <div id="statusLog" style="white-space: pre-line; border:1px solid #ccc; padding:5px; height:150px; overflow-y:auto; margin-top:10px;"></div>
+
     <!-- 추출된 프레임 미리보기 -->
     <div id="framesContainer" style="display:none; margin-bottom:20px;">
         <h3>추출된 프레임</h3>
@@ -38,6 +41,9 @@
     const videoSource = document.getElementById("videoSource");
     const framesContainer = document.getElementById("framesContainer");
     const framesDiv = document.getElementById("frames");
+    const statusLog = document.getElementById("statusLog");
+    let lastStatus = "";  // 이전 상태 저장
+
 
     // 녹화 버튼 클릭
     form.addEventListener("submit", async (e) => {
@@ -69,10 +75,19 @@
     setInterval(async () => {
         const res = await fetch("/recording_status");
         const data = await res.json();
+
+        // 기존 status는 그대로 표시
         statusEl.textContent = data.status;
 
+        // 새 상태 메시지가 이전과 다르면 로그에 추가
+        if (data.status !== lastStatus) {
+            statusLog.textContent += data.status + "\n";
+            statusLog.scrollTop = statusLog.scrollHeight;  // 자동 스크롤
+            lastStatus = data.status;
+        }
+
         // 영상 자동 재생
-        if (data.status.includes("프레임 추출 완료") && videoContainer.style.display === "none") {
+        if (data.status.includes("녹화 및 프레임 추출 완료") && videoContainer.style.display === "none") {
             const videoUrl = `/recorded_video?time=${new Date().getTime()}`;
             const exists = await waitForVideo(videoUrl);
             if (exists) {
