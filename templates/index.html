@@ -1,53 +1,30 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>Raspberry Pi Camera Stream</title>
-</head>
-<body>
-    <h1>Camera Recording</h1>
+<script>
+const form = document.getElementById("recordForm");
+const statusEl = document.getElementById("status");
+const videoEl = document.getElementById("recordedVideo");
+const sourceEl = document.getElementById("videoSource");
 
-    <form id="recordForm" method="POST">
-        <button type="submit">녹화 시작</button>
-    </form>
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    statusEl.textContent = "녹화 중...";
+    videoEl.style.display = "none";
 
-    <p id="status">대기 중</p>
+    const res = await fetch("/start_recording", { method: "POST" });
+    const data = await res.json();
+    statusEl.textContent = data.status;
 
-    <!-- 녹화 후 재생용 비디오 -->
-    <video id="recordedVideo" width="640" height="480" controls style="display:none;">
-        <source id="videoSource" src="" type="video/mp4">
-        브라우저가 video 태그를 지원하지 않습니다.
-    </video>
-
-    <script>
-        const form = document.getElementById("recordForm");
-        const statusEl = document.getElementById("status");
-        const videoEl = document.getElementById("recordedVideo");
-        const sourceEl = document.getElementById("videoSource");
-
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            statusEl.textContent = "녹화 중...";
-            videoEl.style.display = "none";
-
-            const res = await fetch("/start_recording", { method: "POST" });
-            const data = await res.json();
-            statusEl.textContent = data.status;
-
-            // 녹화가 끝난 뒤 6초 후에 영상 표시
-            setTimeout(() => {
-                fetch("/").then(r => r.text()).then(html => {
-                    // 페이지에서 latest_video 값 추출
-                    const videoName = html.match(/latest_video = "(.*)"/)[1];
-                    if(videoName) {
-                        sourceEl.src = `/recorded/${videoName}`;
-                        videoEl.load();
-                        videoEl.style.display = "block";
-                        statusEl.textContent = "녹화 완료";
-                    }
-                });
-            }, 6000); // 녹화 시간 + 안전 여유
-        });
-    </script>
-</body>
-</html>
+    setTimeout(async () => {
+        const res2 = await fetch("/latest_video");
+        const data2 = await res2.json();
+        const videoName = data2.filename;
+        if (videoName) {
+            sourceEl.src = `/recorded/${videoName}`;
+            videoEl.load();
+            videoEl.style.display = "block";
+            statusEl.textContent = "녹화 완료";
+        } else {
+            statusEl.textContent = "녹화 파일이 없습니다.";
+        }
+    }, 6000);
+});
+</script>
