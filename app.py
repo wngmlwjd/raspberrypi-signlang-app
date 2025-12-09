@@ -20,7 +20,7 @@ def record_video():
     recording_status = "녹화 완료. 프레임 추출 중..."
     
     # 모든 프레임 추출
-    frame_count = extract_frames(video_path=config.VIDEO_PATH, output_dir="frames")
+    frame_count = extract_frames()
     
     recording_status = f"녹화 및 프레임 추출 완료 ({frame_count} 프레임)"
 
@@ -32,12 +32,6 @@ def index():
 def start_recording():
     global recording_thread
     if recording_thread is None or not recording_thread.is_alive():
-
-        # 기존 frames 폴더 삭제 후 재생성
-        if os.path.exists("frames"):
-            shutil.rmtree("frames")
-        os.makedirs("frames", exist_ok=True)
-
         recording_thread = threading.Thread(target=record_video, daemon=True)
         recording_thread.start()
         return jsonify({"status": "녹화를 시작했습니다!"})
