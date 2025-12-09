@@ -15,15 +15,14 @@
     <!-- 녹화 상태 표시 -->
     <p id="status">대기 중</p>
 
-    <!-- 추출된 프레임 미리보기 -->
-    <div id="framesContainer" style="display:none; margin-top:20px;">
+    <!-- 추출된 프레임 미리보기 (영상 위) -->
+    <div id="framesContainer" style="display:none; margin-bottom:20px;">
         <h3>추출된 프레임</h3>
         <div id="frames" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
     </div>
 
     <!-- 녹화 영상 재생 -->
     <video id="recordedVideo" width="640" height="480" controls style="display:none;">
-        <h3>녹화된 영상</h3>
         <source id="videoSource" src="" type="video/mp4">
         브라우저가 video 태그를 지원하지 않습니다.
     </video>
