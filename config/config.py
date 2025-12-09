@@ -3,6 +3,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 DATASET_DIR = os.path.join(BASE_DIR, "dataset")
+RAW_DIR = os.path.join(DATASET_DIR, "raw")
 FRAMES_DIR = os.path.join(DATASET_DIR, "frames")
 LANDMARKS_DIR = os.path.join(DATASET_DIR, "landmarks")
 FEATURES_DIR = os.path.join(DATASET_DIR, "features")
@@ -12,7 +13,7 @@ MODEL_PATH = os.path.join(MODEL_DIR, "best_model.tflite")
 MAXJ_PATH = os.path.join(MODEL_DIR, "max_joints.txt")
 LABEL_ENCODER_PATH = os.path.join(MODEL_DIR, "label_encoder.pkl")
 
-VIDEO_PATH = "/Users/wngmlwjd/workspace/github/raspberrypi-signlang-app/dataset/raw/NIA_SL_WORD1501_REAL01_D.mp4"
+VIDEO_PATH = "/Users/wngmlwjd/workspace/github/raspberrypi-signlang-app/dataset/raw/test.mp4"
 
 # ===============================
 # MediaPipe Hands 설정
@@ -26,3 +27,12 @@ MEDIAPIPE_HANDS_CONFIG = {
 
 SEQUENCE_LENGTH = 30  # 모델 입력 시퀀스 길이
 SEQUENCE_STEP = 5    # 시퀀스 생성 시 프레임 이동 간격
+
+CMD = [
+    "rpicam-vid",
+    "-t", "0",                  # 무제한 녹화
+    "-o", f"{RAW_DIR}/test.mp4",          # 저장할 영상 파일
+    "--width", "640",
+    "--height", "480",
+    "--framerate", "30",
+]
