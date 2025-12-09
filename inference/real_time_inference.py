@@ -4,9 +4,10 @@ import numpy as np
 import time
 from collections import deque
 import os
+import glob
 
-from config.config import SEQUENCE_LENGTH, CMD, RAW_DIR
-from inference.extract_frames import extract_frames
+from config.config import SEQUENCE_LENGTH, CMD, RAW_DIR, FRAMES_DIR
+from inference.extract_frames import extract_frames  # 저장 전용
 from inference.extract_landmarks import extract_landmarks
 from inference.preprocessor import process_to_feature
 from inference.TFLite import AppInferenceTFLite
@@ -17,7 +18,7 @@ def rpicam_realtime_loop(interval=5):
     """
     interval: 영상 단위 녹화 시간 (초)
     """
-    # infer = AppInferenceTFLite()
+    infer = AppInferenceTFLite()
     file_index = 0
 
     while True:
@@ -32,33 +33,47 @@ def rpicam_realtime_loop(interval=5):
         subprocess.run(cmd)
 
         # -------------------------------
-        # 2) 녹화된 영상에서 프레임 추출
+        # 2) 녹화된 영상에서 프레임 저장
         # -------------------------------
-        print("🎞 Extracting frames...")
-        frames = extract_frames(output_file)
+        print("🎞 Extracting frames to folder...")
+        extract_frames(video_path=output_file, save_dir=FRAMES_DIR, save_frames=True)
 
-        for frame_count, frame in enumerate(frames):
+        # -------------------------------
+        # 3) 저장된 프레임 순차적으로 처리
+        # -------------------------------
+        frame_files = sorted(glob.glob(os.path.join(FRAMES_DIR, "frame_*.jpg")))
+        for frame_file in frame_files:
+            frame = cv2.imread(frame_file)
+            if frame is None:
+                continue
+
             # -------------------------------
-            # 3) Landmark 추출
+            # Landmark 추출
             # -------------------------------
             landmarks = extract_landmarks(frame)
             if landmarks is None:
                 continue
 
             # -------------------------------
-            # 4) Feature 전처리
+            # Feature 전처리
             # -------------------------------
             feature = process_to_feature(landmarks)
             buffer.append(feature)
 
             # -------------------------------
-            # 5) 버퍼 상태 및 Inference
+            # 버퍼가 채워지면 Inference
             # -------------------------------
-            # if len(buffer) == SEQUENCE_LENGTH:
-            #     seq_array = np.array(buffer)
-            #     pred_word, pred_prob = infer.predict_from_array(seq_array)
-            #     print(f"👉 Result: {pred_word}  |  confidence={pred_prob.max():.4f}")
-            #     print("-------------------------------------------")
+            if len(buffer) == SEQUENCE_LENGTH:
+                seq_array = np.array(buffer)
+                pred_word, pred_prob = infer.predict_from_array(seq_array)
+                print(f"👉 Result: {pred_word}  |  confidence={pred_prob.max():.4f}")
+                print("-------------------------------------------")
+
+        # -------------------------------
+        # 4) 프레임 폴더 초기화 (선택 사항)
+        # -------------------------------
+        for f in frame_files:
+            os.remove(f)
 
         print(f"✅ Finished processing {output_file}\n")
 
