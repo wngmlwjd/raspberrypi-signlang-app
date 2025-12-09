@@ -22,15 +22,18 @@
     </div>
 
     <!-- 녹화 영상 재생 -->
-    <video id="recordedVideo" width="640" height="480" controls style="display:none;">
+    <div id="videoContainer" style="display:none; margin-top:10px;">
         <h3>녹화된 영상</h3>
-        <source id="videoSource" src="" type="video/mp4">
-        브라우저가 video 태그를 지원하지 않습니다.
-    </video>
+        <video id="recordedVideo" width="640" height="480" controls>
+            <source id="videoSource" src="" type="video/mp4">
+            브라우저가 video 태그를 지원하지 않습니다.
+        </video>
+    </div>
 
     <script>
         const form = document.getElementById("recordForm");
         const statusEl = document.getElementById("status");
+        const videoContainer = document.getElementById("videoContainer");
         const videoEl = document.getElementById("recordedVideo");
         const videoSource = document.getElementById("videoSource");
         const framesContainer = document.getElementById("framesContainer");
@@ -47,10 +50,10 @@
             const data = await res.json();
             statusEl.textContent = data.status;
 
-            // 영상 자동 재생
-            if (data.status.includes("녹화 완료") && videoEl.style.display === "none") {
+            // 영상 자동 재생 및 제목 표시
+            if (data.status.includes("녹화 완료") && videoContainer.style.display === "none") {
                 videoSource.src = "/recorded_video";
-                videoEl.style.display = "block";
+                videoContainer.style.display = "block";
                 videoEl.load();
                 videoEl.play();
             }
