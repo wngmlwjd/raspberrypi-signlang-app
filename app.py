@@ -7,7 +7,7 @@ from inference.video_saver import save_video
 from inference.extract_frames import extract_frames
 from inference.extract_landmarks import extract_landmarks
 from inference.preprocessor import generate_features_with_sliding
-from inference.predictor import infer_features_in_dir_realistic
+from inference.predictor import infer_features_in_dir_realistic_kyukno
 from config import config
 from utils import log_message
 
@@ -48,7 +48,7 @@ def record_video():
     recording_status = "랜드마크 추출 및 특징 생성 완료. 추론 중..."
     
     # 5) feature별 예측 + 확률 기반 최종 라벨
-    predictions, feature_labels, top5_per_feature, top5_probs_per_feature, final_label, final_prob = infer_features_in_dir_realistic(use_weighted_average=True)
+    predictions, feature_labels, top5_per_feature, top5_probs_per_feature, final_label, final_prob = infer_features_in_dir_realistic_kyukno(use_weighted_average=True)
 
     predicted_labels = {
         "feature_labels": feature_labels,
