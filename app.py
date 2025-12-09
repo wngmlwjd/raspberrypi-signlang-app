@@ -1,37 +1,33 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, send_from_directory
 import threading
+import os
 from inference import video_saver  # save_video()가 있는 모듈
+from config.config import RAW_DIR, VIDEO_PATH
 
 app = Flask(__name__)
 
 recording_thread = None
-recording_status = "대기 중"  # 녹화 상태 저장
 
 def record_video():
-    global recording_status
-    recording_status = "녹화 중..."
-    video_saver.save_video()  # 실제 녹화 함수
-    recording_status = "녹화 완료"
+    video_saver.save_video()  # 파일 이름 반환하도록 save_video 수정 필요
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", latest_video=VIDEO_PATH)
 
 @app.route("/start_recording", methods=["POST"])
 def start_recording():
     global recording_thread
     if recording_thread is None or not recording_thread.is_alive():
-        # 녹화 실행 스레드 생성
         recording_thread = threading.Thread(target=record_video, daemon=True)
         recording_thread.start()
-        return jsonify({"status": "녹화를 시작했습니다!"})
+        return jsonify({"status": "녹화 시작됨"})
     else:
-        return jsonify({"status": "이미 녹화가 진행 중입니다."})
+        return jsonify({"status": "이미 녹화 중"})
 
-@app.route("/recording_status")
-def get_status():
-    # 현재 녹화 상태 반환
-    return jsonify({"status": recording_status})
+@app.route("/recorded/<filename>")
+def recorded_video(filename):
+    return send_from_directory(RAW_DIR, filename)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -13,7 +13,7 @@ MODEL_PATH = os.path.join(MODEL_DIR, "best_model.tflite")
 MAXJ_PATH = os.path.join(MODEL_DIR, "max_joints.txt")
 LABEL_ENCODER_PATH = os.path.join(MODEL_DIR, "label_encoder.pkl")
 
-VIDEO_PATH = "./dataset/raw/test_0000.mp4"
+VIDEO_PATH = "./dataset/raw/video.mp4"
 
 # ===============================
 # MediaPipe Hands 설정
