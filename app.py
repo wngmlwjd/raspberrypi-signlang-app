@@ -49,14 +49,16 @@ def record_video():
     recording_status = "랜드마크 추출 및 특징 생성 완료. 추론 중..."
     
     # 5) feature별 예측 + top5 합산 최종 라벨
-    predictions, feature_labels, final_label = infer_features_in_dir(top5_aggregate=True)
+    predictions, feature_labels, top5_per_feature, final_label = infer_features_in_dir(top5_aggregate=True)
+
     predicted_labels = {
         "feature_labels": feature_labels,
-        "final_label": final_label
+        "final_label": final_label,
+        "top5_per_feature": top5_per_feature
     }
 
-    log_message(f"모든 feature 추론 완료: {predictions.shape}, 최종 라벨: {final_label}")
     recording_status = f"전체 프로세스 완료. feature {len(feature_labels)}개, 최종 라벨: {final_label}"
+    log_message(f"모든 feature 추론 완료: {predictions.shape}, 최종 라벨: {final_label}")
 
 # -----------------------------
 # 라우팅

@@ -77,19 +77,28 @@ def infer_features_in_dir(
 
     all_preds = []
     feature_labels = []
+    top5_per_feature = []  # 각 feature별 top5 라벨 저장
 
     for f in feature_files:
         feature = np.load(os.path.join(features_dir, f))
         pred = infer_feature(model, feature)
+
+        # 단일 feature 최종 라벨
         label_idx = np.argmax(pred)
         label_name = le_dict['int_to_label'].get(label_idx, "unknown")
-        all_preds.append(pred)
         feature_labels.append(label_name)
+
+        # top5 라벨
+        top5_idx = np.argsort(pred)[-5:][::-1]
+        top5_labels = [le_dict['int_to_label'].get(i, "unknown") for i in top5_idx]
+        top5_per_feature.append(top5_labels)
+
+        all_preds.append(pred)
 
     all_preds = np.array(all_preds)
 
     if top5_aggregate:
         final_label = predict_top5_aggregate(all_preds, le_dict)
-        return all_preds, feature_labels, final_label
+        return all_preds, feature_labels, top5_per_feature, final_label
     else:
-        return all_preds, feature_labels
+        return all_preds, feature_labels, top5_per_feature

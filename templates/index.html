@@ -14,7 +14,10 @@
 
     <!-- 녹화 상태 표시 -->
     <p id="status">대기 중</p>
+    
     <p>마지막 예측 라벨: <span id="pred_label">-</span></p>
+    <h3>Feature별 Top5 라벨</h3>
+    <div id="top5Container" style="display:flex; flex-direction:column; gap:5px;"></div>
 
     <!-- 랜드마크 미리보기 -->
     <div id="landmarksContainer" style="display:none; margin-bottom:10px;">
@@ -47,6 +50,17 @@
     const framesDiv = document.getElementById("frames");
     const landmarksContainer = document.getElementById("landmarksContainer");
     const landmarksDiv = document.getElementById("landmarks");
+    const top5Container = document.getElementById("top5Container");
+
+    function updateTop5Labels(top5_per_feature) {
+        top5Container.innerHTML = "";
+        if (!top5_per_feature) return;
+        top5_per_feature.forEach((top5, idx) => {
+            const div = document.createElement("div");
+            div.textContent = `Feature ${idx + 1}: ${top5.join(", ")}`;
+            top5Container.appendChild(div);
+        });
+    }
 
 
     // 녹화 버튼 클릭
@@ -132,7 +146,8 @@
         const res = await fetch("/recording_status");
         const data = await res.json();
         document.getElementById("status").innerText = data.status;
-        document.getElementById("pred_label").innerText = data.predicted_labels?.slice(-1)[0] || "-";
+        document.getElementById("pred_label").innerText = data.predicted_labels?.final_label || "-";
+        updateTop5Labels(data.predicted_labels?.top5_per_feature);
     }
 
     setInterval(updateStatus, 1000);
