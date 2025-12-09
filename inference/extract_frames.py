@@ -1,15 +1,12 @@
 import cv2
 import os
 from utils import log_message
-from config import config
+from config.config import FRAMES_DIR, VIDEO_PATH
 
-def extract_frames(video_path=None, output_dir="frames"):
+def extract_frames(video_path=VIDEO_PATH, output_dir=FRAMES_DIR):
     """
     영상에서 모든 프레임 추출 후 output_dir에 저장
     """
-    if video_path is None:
-        video_path = config.VIDEO_PATH
-
     os.makedirs(output_dir, exist_ok=True)
 
     cap = cv2.VideoCapture(video_path)
