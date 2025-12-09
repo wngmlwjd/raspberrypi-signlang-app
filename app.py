@@ -33,8 +33,8 @@ def record_video():
     recording_status = "녹화 중..."
     
     # 1) 영상 녹화
-    save_video()
-    recording_status = "녹화 완료. 프레임 추출 중..."
+    # save_video()
+    # recording_status = "녹화 완료. 프레임 추출 중..."
     
     # 2) 프레임 추출
     frame_count = extract_frames()
