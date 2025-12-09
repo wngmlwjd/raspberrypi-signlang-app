@@ -7,15 +7,7 @@ def generate():
     """
     rpicam-vid를 subprocess로 실행하고 stdout에서 MJPEG 프레임 읽기
     """
-    cmd = [
-        "rpicam-vid",
-        "-t", "0",
-        "-o", "-",
-        "--width", "160",    # 1/4 크기로 줄임
-        "--height", "120",   # 1/4 크기로 줄임
-        "--framerate", "30",
-        "--codec", "mjpeg"
-    ]
+    cmd = ["rpicam-vid", "-t", "0", "-o", "-", "--width", "640", "--height", "480", "--framerate", "30", "--codec", "mjpeg"]
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=10**8) as proc:
         while True:
             frame = proc.stdout.read(1024)
