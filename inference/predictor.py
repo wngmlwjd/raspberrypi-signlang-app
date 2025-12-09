@@ -40,20 +40,24 @@ def infer_feature(model, feature: np.ndarray) -> np.ndarray:
     return pred[0]
 
 # ----------------------------------------------------
-# 4-1. 최근 N개 feature 가중 평균 기반 최종 라벨 결정
+# 4-1. 전체 feature 중간 1/3 구간 평균 기반 최종 라벨 결정
 # ----------------------------------------------------
-def predict_weighted_average_recent(all_preds, le_dict, recent_n=5, smoothing=0.01):
+def predict_weighted_average_middle(all_preds, le_dict, smoothing=0.01):
     """
     all_preds : (num_features, num_classes) - 각 feature별 softmax
-    recent_n  : 최근 N개 feature만 반영
     smoothing : 확률 안정화용 최소값
     return    : 최종 예측 라벨, 최종 확률
     """
-    # 최근 N개 feature 선택
-    recent_preds = all_preds[-recent_n:]
-    
-    # smoothing 적용 후 평균
-    avg_probs = np.clip(np.mean(recent_preds, axis=0), smoothing, 1.0)
+    all_preds = np.array(all_preds)
+    num_features = all_preds.shape[0]
+
+    # 중간 1/3 구간 선택
+    start_idx = num_features // 3
+    end_idx = 2 * num_features // 3
+    middle_preds = all_preds[start_idx:end_idx]
+
+    # 평균 + smoothing
+    avg_probs = np.clip(np.mean(middle_preds, axis=0), smoothing, 1.0)
     avg_probs /= avg_probs.sum()  # 정규화
 
     final_idx = np.argmax(avg_probs)
@@ -189,13 +193,7 @@ def infer_features_in_dir_realistic_kyukno(
     all_preds = np.array(all_preds)
 
     if use_weighted_average:
-        final_label, final_prob = predict_kyukno_with_overall(
-            all_preds,
-            le_dict,
-            kyukno_label=kyukno_label,
-            overall_threshold=kyukno_threshold,
-            recent_n=recent_n
-        )
+        final_label, final_prob = predict_weighted_average_middle(all_preds, le_dict)
     else:
         from collections import Counter
         top5_labels_flat = [label for sublist in top5_per_feature for label in sublist]
