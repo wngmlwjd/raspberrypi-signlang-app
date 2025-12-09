@@ -7,11 +7,10 @@ def rpicam_vid_stream():
     cmd = [
         "rpicam-vid",
         "-t", "5000",
-        "-o", "-",       # stdout으로 영상 출력
+        "-o", "test.mp4",       # stdout으로 영상 출력
         "--width", "640",
         "--height", "480",
         "--framerate", "30",
-        "--liba-format", "jpeg"  # JPEG 포맷으로 출력
     ]
 
     # subprocess로 실행
