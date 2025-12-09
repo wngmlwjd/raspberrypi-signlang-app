@@ -7,7 +7,7 @@ body {
 #layoutWrapper {
     display: flex;
     width: 100%;
-    gap: 20px;
+    gap: 30px;
 }
 
 #leftPanel {
@@ -89,7 +89,7 @@ button {
 
 /* 녹화 영상 */
 #recordedVideo {
-    width: 90%;
+    width: 85%;
     height: auto;
     border: 1px solid #333;
 }
