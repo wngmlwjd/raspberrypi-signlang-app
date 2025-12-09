@@ -35,6 +35,6 @@ CMD = [
     "--width", "640",
     "--height", "480",
     "--framerate", "30",
-    "--codec", "mjpeg"
+    "--codec", "mjpeg",
     "--nopreview"    
 ]
