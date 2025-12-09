@@ -1,4 +1,3 @@
-# inference/predictor_h5.py
 import os
 import numpy as np
 from tensorflow.keras.models import load_model
@@ -18,14 +17,14 @@ def load_h5_model(model_path: str):
     return model
 
 # ----------------------------------------------------
-# 2. label encoder 로드
+# 2. label encoder 로드 (dict)
 # ----------------------------------------------------
 def load_label_encoder(path: str = LABEL_ENCODER_PATH):
     if not os.path.exists(path):
         raise FileNotFoundError(f"Label encoder not found: {path}")
-    le = joblib.load(path)
-    log_message(f"Label encoder loaded: {path}")
-    return le
+    le_dict = joblib.load(path)  # {index: label} 형태라고 가정
+    log_message(f"Label encoder loaded (dict): {path}")
+    return le_dict
 
 # ----------------------------------------------------
 # 3. 단일 feature 추론
@@ -48,7 +47,7 @@ def infer_features_in_dir(
     label_encoder_path: str = LABEL_ENCODER_PATH
 ):
     model = load_h5_model(model_path)
-    le = load_label_encoder(label_encoder_path)
+    le_dict = load_label_encoder(label_encoder_path)
 
     feature_files = sorted([f for f in os.listdir(features_dir) if f.endswith(".npy")])
     if not feature_files:
@@ -61,7 +60,7 @@ def infer_features_in_dir(
         feature = np.load(os.path.join(features_dir, f))
         pred = infer_feature(model, feature)
         label_idx = np.argmax(pred)
-        label_name = le.inverse_transform([label_idx])[0]  # index → 클래스 이름
+        label_name = le_dict.get(label_idx, "Unknown")  # dict lookup
         log_message(f"Inferred {f}: {label_name} (prob={pred[label_idx]:.3f})")
         all_preds.append(pred)
         all_labels.append(label_name)
