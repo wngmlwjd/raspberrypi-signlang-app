@@ -36,7 +36,7 @@ def rpicam_realtime_loop(interval=5):
         # 2) 녹화된 영상에서 프레임 저장
         # -------------------------------
         print("🎞 Extracting frames to folder...")
-        extract_frames(video_path=output_file, save_dir=FRAMES_DIR, save_frames=True)
+        extract_frames()
 
         # -------------------------------
         # 3) 저장된 프레임 순차적으로 처리
@@ -57,8 +57,8 @@ def rpicam_realtime_loop(interval=5):
             # -------------------------------
             # Feature 전처리
             # -------------------------------
-            feature = process_to_feature(landmarks)
-            buffer.append(feature)
+            # feature = process_to_feature(landmarks)
+            # buffer.append(feature)
 
             # -------------------------------
             # 버퍼가 채워지면 Inference
