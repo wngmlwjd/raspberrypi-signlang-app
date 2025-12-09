@@ -17,7 +17,7 @@ LABEL_ENCODER_PATH = os.path.join(MODEL_DIR, "label_encoder.pkl")
 VIDEO_PATH = "./dataset/raw/video.mp4"
 
 INPUT_SIZE = 63
-DATA_SIZE = 211
+DATA_SIZE = 228
 
 # ===============================
 # MediaPipe Hands 설정
