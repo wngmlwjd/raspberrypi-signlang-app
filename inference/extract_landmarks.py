@@ -35,7 +35,7 @@ def extract_landmarks(frame_dir: str = FRAMES_DIR, save_dir: str = LANDMARKS_DIR
             DRAW_LANDMARKS_DIR,
             os.path.splitext(frame_file)[0] + ".jpg"
         )
-        tracker.draw_and_save_landmarks(frame_path, DRAW_LANDMARKS_DIR, landmarks)
+        tracker.draw_and_save_landmarks(frame_path, save_path, landmarks)
         
         landmark_count += 1
 
