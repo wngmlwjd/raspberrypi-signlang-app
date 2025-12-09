@@ -109,27 +109,34 @@ def predict_kyukno_with_overall(all_preds, le_dict, kyukno_label="격노",
     smoothing          : 확률 안정화용 최소값
     return             : 최종 예측 라벨, 최종 확률
     """
+    all_preds = np.array(all_preds)
+    num_features = all_preds.shape[0]
+
     # 전체 평균
     avg_probs_all = np.clip(np.mean(all_preds, axis=0), smoothing, 1.0)
     avg_probs_all /= avg_probs_all.sum()
 
     # 격노 index
-    kyukno_idx = None
-    for k, v in le_dict['int_to_label'].items():
-        if v == kyukno_label:
-            kyukno_idx = k
-            break
+    kyukno_idx = next((k for k, v in le_dict['int_to_label'].items() if v == kyukno_label), None)
 
     # 전체 평균에서 압도적 격노면 바로 반환
     if kyukno_idx is not None and avg_probs_all[kyukno_idx] >= overall_threshold:
         return kyukno_label, float(avg_probs_all[kyukno_idx])
 
-    # 최근 N개 평균, 격노 제외
-    recent_preds = all_preds[-recent_n:]
+    # 최근 N개 평균, feature 수보다 recent_n이 크면 전체 사용
+    recent_n_use = min(recent_n, num_features)
+    recent_preds = all_preds[-recent_n_use:]
     avg_probs_recent = np.clip(np.mean(recent_preds, axis=0), smoothing, 1.0)
+
+    # 격노 제외
     if kyukno_idx is not None:
         avg_probs_recent[kyukno_idx] = 0
-    avg_probs_recent /= avg_probs_recent.sum()
+    sum_probs = avg_probs_recent.sum()
+    if sum_probs == 0:  # 모두 0이면 smoothing으로 재정규화
+        avg_probs_recent = np.full_like(avg_probs_recent, smoothing)
+        avg_probs_recent /= avg_probs_recent.sum()
+    else:
+        avg_probs_recent /= sum_probs
 
     final_idx = np.argmax(avg_probs_recent)
     final_label = le_dict['int_to_label'].get(final_idx, "unknown")
