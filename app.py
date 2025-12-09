@@ -1,9 +1,10 @@
 from flask import Flask, render_template, jsonify, send_file
 import threading
-from inference import video_saver
-from extract_frames import extract_frames
-from config import config
 import os
+
+from inference.video_saver import save_video
+from inference.extract_frames import extract_frames
+from config import config
 
 app = Flask(__name__)
 
@@ -14,7 +15,7 @@ frame_count = 0  # 추출된 프레임 개수
 def record_video():
     global recording_status, frame_count
     recording_status = "녹화 중..."
-    video_saver.save_video()  # 실제 녹화
+    save_video()  # 실제 녹화
     recording_status = "녹화 완료. 프레임 추출 중..."
     
     # 프레임 추출
