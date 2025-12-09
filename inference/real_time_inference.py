@@ -8,7 +8,7 @@ import glob
 
 from config.config import SEQUENCE_LENGTH, CMD, RAW_DIR, FRAMES_DIR
 from inference.extract_frames import extract_frames  # 저장 전용
-from inference.extract_landmarks import extract_landmarks
+from inference.extract_landmarks import extract_landmarks_from_frames
 from inference.preprocessor import process_to_feature
 from inference.TFLite import AppInferenceTFLite
 
@@ -50,7 +50,7 @@ def rpicam_realtime_loop(interval=5):
             # -------------------------------
             # Landmark 추출
             # -------------------------------
-            landmarks = extract_landmarks(frame)
+            landmarks = extract_landmarks_from_frames()
             if landmarks is None:
                 continue
 
