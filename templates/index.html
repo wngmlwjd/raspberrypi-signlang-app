@@ -30,7 +30,7 @@
     <!-- 녹화 영상 재생 -->
     <div id="videoContainer" style="display:none; margin-top:10px;">
         <h3>녹화된 영상</h3>
-        <video id="recordedVideo" width="640" height="480" controls>
+        <video id="recordedVideo" width="960" height="720" controls> <!-- 640x480 → 960x720 -->
             <source id="videoSource" src="" type="video/mp4">
             브라우저가 video 태그를 지원하지 않습니다.
         </video>
@@ -106,7 +106,7 @@
             for (let i = 0; i < totalFrames && i < displayCount * step; i += step) {
                 const img = document.createElement("img");
                 img.src = `/frames/frame_${i.toString().padStart(5,'0')}.jpg?time=${new Date().getTime()}`;
-                img.width = 120;
+                img.width = 180;  // 120 → 180
                 framesDiv.appendChild(img);
             }
         }
@@ -121,7 +121,7 @@
             for (let i = 0; i < totalLandmarks && i < displayCount * step; i += step) {
                 const img = document.createElement("img");
                 img.src = `/draw_landmarks/landmark_${i.toString().padStart(5,'0')}.jpg?time=${new Date().getTime()}`;
-                img.width = 120;
+                img.width = 180;  // 120 → 180
                 landmarksDiv.appendChild(img);
             }
         }
