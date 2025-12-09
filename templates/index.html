@@ -10,19 +10,6 @@
 </head>
 <body>
     <h1>RPi Camera Live Stream</h1>
-    <img id="stream" src="{{ url_for('index') }}" width="640" height="480">
-    <script>
-        const img = document.getElementById("stream");
-        function updateStream() {
-            fetch("/")
-                .then(response => response.blob())
-                .then(blob => {
-                    const url = URL.createObjectURL(blob);
-                    img.src = url;
-                })
-                .finally(() => setTimeout(updateStream, 30));
-        }
-        updateStream();
-    </script>
+    <img id="stream" src="{{ url_for('video_feed') }}" width="640" height="480">
 </body>
 </html>
