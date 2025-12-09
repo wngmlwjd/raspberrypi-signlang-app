@@ -8,7 +8,7 @@ while True:
     filename = f"test_{counter:03d}.jpg"
     
     # rpicam-dpeg 명령어 실행
-    subprocess.run(["rpicam-dpeg", "--output", filename, "--timeout", "500"])
+    subprocess.run(["rpicam-jpeg", "--output", filename, "--timeout", "500"])
     
     # 카운터 증가
     counter += 1
