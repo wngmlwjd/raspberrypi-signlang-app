@@ -14,7 +14,11 @@
 
     <!-- 녹화 상태 표시 -->
     <p id="status">대기 중</p>
-    <p>마지막 예측 라벨: <span id="pred_label">-</span></p>
+    
+    <!-- 최종 예측 라벨 및 feature별 라벨 -->
+    <p>최종 예측 라벨: <span id="pred_label">-</span></p>
+    <p>Feature별 예측 라벨:</p>
+    <div id="feature_labels" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
 
     <!-- 랜드마크 미리보기 -->
     <div id="landmarksContainer" style="display:none; margin-bottom:10px;">
@@ -48,6 +52,26 @@
     const landmarksContainer = document.getElementById("landmarksContainer");
     const landmarksDiv = document.getElementById("landmarks");
 
+    const predLabelEl = document.getElementById("pred_label");
+    const featureLabelsDiv = document.getElementById("feature_labels");
+
+    // 최종 라벨 표시
+    if (data.predicted_labels?.final_label) {
+        predLabelEl.textContent = data.predicted_labels.final_label;
+    }
+
+    // feature별 라벨 표시
+    if (data.predicted_labels?.feature_labels) {
+        featureLabelsDiv.innerHTML = "";
+        data.predicted_labels.feature_labels.forEach(label => {
+            const span = document.createElement("span");
+            span.textContent = label;
+            span.style.padding = "2px 5px";
+            span.style.border = "1px solid #ccc";
+            span.style.borderRadius = "3px";
+            featureLabelsDiv.appendChild(span);
+        });
+    }
 
     // 녹화 버튼 클릭
     form.addEventListener("submit", async (e) => {
