@@ -127,17 +127,24 @@ def generate_features_with_sliding(
 
     for fname in npy_files:
         arr = np.load(os.path.join(frame_npy_dir, fname))   # (J,3) or (1,J,3)
+
         if arr.size == 0:
             continue
-        
+
+        # 첫 번째 차원이 1이면 제거
+        if arr.ndim == 3 and arr.shape[0] == 1:
+            arr = arr[0]  # (J,3)
+
+        # 이제 shape 체크
         if arr.ndim != 2 or arr.shape[1] != 3:
             raise ValueError(f"Invalid landmark shape: {arr.shape}")
 
+        # pad or truncate
         if arr.shape[0] < J_max:
-            arr = np.pad(arr, ((0, max(J_max - arr.shape[0], 0)), (0, 0)), mode="constant")
+            arr = np.pad(arr, ((0, J_max - arr.shape[0]), (0, 0)), mode="constant")
         elif arr.shape[0] > J_max:
             arr = arr[:J_max, :]
-            
+
         # normalize
         arr = transform_and_normalize_landmarks(arr)[0]  # shape = (J_max,3)
         normalized_frames.append(arr)
