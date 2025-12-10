@@ -29,7 +29,7 @@ function updateTop3(labels, probs) {
     labels.forEach((label, i) => {
         const div = document.createElement("div");
         div.classList.add("top3-item");
-        div.textContent = `${i + 1}. ${label} (${probs[i]}%)`;
+        div.textContent = `${i + 1}. ${label} (${probs[i] * 100}%)`;
         top3Container.appendChild(div);
     });
 }

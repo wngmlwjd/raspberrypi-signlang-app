@@ -29,9 +29,6 @@ MEDIAPIPE_HANDS_CONFIG = {
     "min_tracking_confidence": 0.5,
 }
 
-SEQUENCE_LENGTH = 30  # 모델 입력 시퀀스 길이
-SEQUENCE_STEP = 5    # 시퀀스 생성 시 프레임 이동 간격
-
 CMD = [
     "rpicam-vid",
     "-t", "0",
