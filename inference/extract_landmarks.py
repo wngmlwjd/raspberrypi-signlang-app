@@ -4,7 +4,7 @@ import numpy as np
 from config.config import FRAMES_DIR, LANDMARKS_DIR, DRAW_LANDMARKS_DIR
 from inference.hand_tracking import HandTracker
 
-def extract_landmarks(frame_dir: str = FRAMES_DIR, save_dir: str = LANDMARKS_DIR, skip: int = 1):
+def extract_landmarks(frame_dir: str = FRAMES_DIR, save_dir: str = LANDMARKS_DIR, skip: int = 0):
     """
     skip: 0이면 모든 프레임 처리, 1이면 한 장 건너 하나씩 처리, 2면 두 장 건너 하나씩 처리...
     """
