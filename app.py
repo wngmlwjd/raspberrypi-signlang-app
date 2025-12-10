@@ -62,7 +62,7 @@ def record_video():
         "top3_probs": [round(p, 4) for p in result["top3_probs"]],
     }
 
-    recording_status = f"전체 프로세스 완료. feature 1개 생성됨"
+    recording_status = f"전체 프로세스 완료."
     log_message(f"예측 완료: top1 = {predicted_labels['top1_label']} "
                 f"({predicted_labels['top1_prob']})")
 
