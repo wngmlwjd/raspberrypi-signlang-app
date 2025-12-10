@@ -58,7 +58,7 @@ def infer_feature_tflite(interpreter, feature: np.ndarray) -> np.ndarray:
 # ----------------------------------------------------
 def infer_single_feature_with_top3(
     features_dir: str = FEATURES_DIR,
-    model_path: str = MODEL_TFLITE_PATH,
+    model_path: str = MODEL_PATH,
     label_encoder_path: str = LABEL_ENCODER_PATH,
 ):
     # load
