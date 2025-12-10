@@ -3,7 +3,7 @@ import numpy as np
 import joblib
 import tensorflow as tf
 
-from config.config import FEATURES_DIR, MODEL_TFLITE_PATH, LABEL_ENCODER_PATH
+from config.config import FEATURES_DIR, MODEL_PATH, LABEL_ENCODER_PATH
 from utils import log_message
 
 # ----------------------------------------------------

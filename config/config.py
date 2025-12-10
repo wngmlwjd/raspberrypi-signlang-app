@@ -10,7 +10,7 @@ DRAW_LANDMARKS_DIR = os.path.join(DATASET_DIR, "draw_landmarks")
 FEATURES_DIR = os.path.join(DATASET_DIR, "features")
 
 MODEL_DIR = os.path.join(BASE_DIR, "model")
-MODEL_PATH = os.path.join(MODEL_DIR, "best_model.h5")
+MODEL_PATH = os.path.join(MODEL_DIR, "best_model.tflite")
 MAXJ_PATH = os.path.join(MODEL_DIR, "max_joints.txt")
 LABEL_ENCODER_PATH = os.path.join(MODEL_DIR, "label_encoder.pkl")
 
